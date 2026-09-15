@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Undo2, Redo2, Monitor, Tablet, Smartphone, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Undo2, Redo2, Monitor, Tablet, Smartphone, Check, Loader2, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/features/stores/components/store-editor/editor-store";
@@ -67,6 +67,11 @@ export function Toolbar({ storeId, storeName, saving }: { storeId: string; store
       </div>
 
       <VersionHistorySheet storeId={storeId} />
+      <Button variant="default" size="sm" asChild>
+        <Link href={`/stores/${storeId}/publish`}>
+          <Rocket className="h-4 w-4" /> Publish
+        </Link>
+      </Button>
     </div>
   );
 }

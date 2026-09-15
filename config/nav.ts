@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag } from "lucide-react";
 
 export interface NavItem {
   title: string;
@@ -16,6 +16,7 @@ export const mainNav: NavItem[] = [
   { title: "Store Builder", href: "/store-builder", icon: Sparkles },
   { title: "Stores", href: "/stores", icon: Store },
   { title: "Ad Studio", href: "/ads", icon: Megaphone },
+  { title: "Shopify", href: "/shopify", icon: ShoppingBag },
   { title: "Activity", href: "/activity", icon: History },
 ];
 
