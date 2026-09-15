@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { mainNav, bottomNav, type NavItem } from "@/config/nav";
+import { mainNav, bottomNav, adminNav } from "@/config/nav";
 
-export function Sidebar({ isAdmin, adminNav }: { isAdmin: boolean; adminNav?: NavItem[] }) {
-  const items = isAdmin ? [...mainNav, ...(adminNav ?? [])] : mainNav;
+export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
+  const items = isAdmin ? [...mainNav, ...adminNav] : mainNav;
 
   return (
     <aside className="hidden w-64 shrink-0 border-r bg-card md:flex md:flex-col">

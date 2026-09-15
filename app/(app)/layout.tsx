@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="container max-w-7xl py-6">{children}</div>
         </main>
       </div>
-      <CommandPalette />
+      <CommandPalette isAdmin={isAdmin} />
     </div>
   );
 }

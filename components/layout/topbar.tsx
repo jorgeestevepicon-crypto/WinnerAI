@@ -6,22 +6,19 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
-import type { NavItem } from "@/config/nav";
 
 export function Topbar({
   user,
   isAdmin,
-  adminNav,
   title,
 }: {
   user: { name?: string | null; email?: string | null; image?: string | null };
   isAdmin: boolean;
-  adminNav?: NavItem[];
   title?: string;
 }) {
   return (
     <header className="flex h-16 items-center gap-3 border-b bg-background px-4 md:px-6">
-      <MobileSidebar isAdmin={isAdmin} adminNav={adminNav} />
+      <MobileSidebar isAdmin={isAdmin} />
       {title && <h1 className="hidden text-lg font-semibold md:block">{title}</h1>}
       <div className="ml-auto flex items-center gap-2">
         <Button

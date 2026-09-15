@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag, LineChart } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag, LineChart, CreditCard, Shield } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,7 +13,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 
-export function CommandPalette() {
+export function CommandPalette({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
 
@@ -60,6 +60,9 @@ export function CommandPalette() {
           <CommandItem onSelect={() => go("/analytics")}>
             <LineChart className="h-4 w-4" /> Analytics
           </CommandItem>
+          <CommandItem onSelect={() => go("/billing")}>
+            <CreditCard className="h-4 w-4" /> Billing
+          </CommandItem>
           <CommandItem onSelect={() => go("/activity")}>
             <History className="h-4 w-4" /> Activity
           </CommandItem>
@@ -67,6 +70,11 @@ export function CommandPalette() {
             <Settings className="h-4 w-4" /> Settings
             <CommandShortcut>⌘K</CommandShortcut>
           </CommandItem>
+          {isAdmin && (
+            <CommandItem onSelect={() => go("/admin")}>
+              <Shield className="h-4 w-4" /> Admin
+            </CommandItem>
+          )}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

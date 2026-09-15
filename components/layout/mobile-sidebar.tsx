@@ -6,11 +6,11 @@ import { Menu, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { mainNav, bottomNav, type NavItem } from "@/config/nav";
+import { mainNav, bottomNav, adminNav } from "@/config/nav";
 
-export function MobileSidebar({ isAdmin, adminNav }: { isAdmin: boolean; adminNav?: NavItem[] }) {
+export function MobileSidebar({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = React.useState(false);
-  const items = isAdmin ? [...mainNav, ...(adminNav ?? [])] : mainNav;
+  const items = isAdmin ? [...mainNav, ...adminNav] : mainNav;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

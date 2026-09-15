@@ -16,6 +16,7 @@ export const env = {
     url: process.env.AUTH_URL ?? "http://localhost:3000",
     googleId: process.env.AUTH_GOOGLE_ID,
     googleSecret: process.env.AUTH_GOOGLE_SECRET,
+    adminEmail: process.env.ADMIN_EMAIL,
   },
 
   ai: {

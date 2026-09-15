@@ -46,6 +46,7 @@ model User {
   onboardingCompleted Boolean @default(false)
   onboardingData      Json?
   preferences         Json?
+  suspended           Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,6 +187,7 @@ model Product {
   metadata Json?
 
   saved     Boolean @default(false)
+  featured  Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

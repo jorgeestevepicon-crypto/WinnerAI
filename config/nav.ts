@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag, LineChart } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag, LineChart, CreditCard, Shield } from "lucide-react";
 
 export interface NavItem {
   title: string;
@@ -18,7 +18,10 @@ export const mainNav: NavItem[] = [
   { title: "Ad Studio", href: "/ads", icon: Megaphone },
   { title: "Shopify", href: "/shopify", icon: ShoppingBag },
   { title: "Analytics", href: "/analytics", icon: LineChart },
+  { title: "Billing", href: "/billing", icon: CreditCard },
   { title: "Activity", href: "/activity", icon: History },
 ];
+
+export const adminNav: NavItem[] = [{ title: "Admin", href: "/admin", icon: Shield }];
 
 export const bottomNav: NavItem[] = [{ title: "Settings", href: "/settings", icon: Settings }];

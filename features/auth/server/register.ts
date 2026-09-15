@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { registerSchema } from "@/features/auth/schemas";
+import { env } from "@/config/env";
 
 export type RegisterResult = { success: true } | { success: false; error: string };
 
@@ -20,12 +21,14 @@ export async function registerUser(input: unknown): Promise<RegisterResult> {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const isConfiguredAdmin = !!env.auth.adminEmail && email.toLowerCase() === env.auth.adminEmail.toLowerCase();
 
   await prisma.user.create({
     data: {
       name,
       email,
       passwordHash,
+      role: isConfiguredAdmin ? "ADMIN" : "USER",
       subscription: { create: { plan: "FREE", status: "ACTIVE" } },
     },
   });
