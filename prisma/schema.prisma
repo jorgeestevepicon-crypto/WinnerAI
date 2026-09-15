@@ -45,6 +45,7 @@ model User {
 
   onboardingCompleted Boolean @default(false)
   onboardingData      Json?
+  preferences         Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
