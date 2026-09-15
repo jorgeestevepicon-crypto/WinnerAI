@@ -41,18 +41,18 @@ export async function getProductById(id: string) {
   return prisma.product.findUnique({ where: { id }, include: { analyses: { orderBy: { createdAt: "desc" }, take: 1 } } });
 }
 
-export async function getProductCategories() {
+export async function getProductCategories(userId: string) {
   const rows = await prisma.product.findMany({
-    where: { deletedAt: null, category: { not: null } },
+    where: { userId, deletedAt: null, category: { not: null } },
     select: { category: true },
     distinct: ["category"],
   });
   return rows.map((r) => r.category!).filter(Boolean).sort();
 }
 
-export async function getProductCountries() {
+export async function getProductCountries(userId: string) {
   const rows = await prisma.product.findMany({
-    where: { deletedAt: null, country: { not: null } },
+    where: { userId, deletedAt: null, country: { not: null } },
     select: { country: true },
     distinct: ["country"],
   });

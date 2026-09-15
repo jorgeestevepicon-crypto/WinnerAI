@@ -8,6 +8,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/config/env";
 import { authConfig } from "@/auth.config";
+import { logger } from "@/lib/logger";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -34,12 +35,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.passwordHash) return null;
+        if (!user || !user.passwordHash) {
+          logger.warn("login_failed", { reason: "no_such_account" });
+          return null;
+        }
 
         const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) return null;
-        if (user.suspended) return null;
+        if (!isValid) {
+          logger.warn("login_failed", { userId: user.id, reason: "bad_password" });
+          return null;
+        }
+        if (user.suspended) {
+          logger.warn("login_failed", { userId: user.id, reason: "suspended" });
+          return null;
+        }
 
+        logger.info("login_succeeded", { userId: user.id });
         return {
           id: user.id,
           email: user.email,

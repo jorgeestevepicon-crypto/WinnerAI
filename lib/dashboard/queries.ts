@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 export async function getDashboardStats(userId: string) {
   const [productsDiscovered, productsSaved, productsAnalyzed, storesCreated, adsGenerated, shopifyConnection] =
     await Promise.all([
-      prisma.product.count({ where: { deletedAt: null } }),
+      prisma.product.count({ where: { userId, deletedAt: null } }),
       prisma.product.count({ where: { userId, saved: true, deletedAt: null } }),
       prisma.productAnalysis.count({ where: { product: { userId } } }),
       prisma.store.count({ where: { userId, deletedAt: null } }),

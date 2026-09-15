@@ -41,9 +41,10 @@ export async function updateNotificationPreferences(input: unknown) {
   return { success: true as const };
 }
 
-export async function getNotificationPreferences(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { preferences: true } });
-  const prefs = user?.preferences as { notifications?: unknown } | null;
+export async function getNotificationPreferences() {
+  const user = await requireUser();
+  const record = await prisma.user.findUnique({ where: { id: user.id }, select: { preferences: true } });
+  const prefs = record?.preferences as { notifications?: unknown } | null;
   const parsed = notificationPreferencesSchema.safeParse(prefs?.notifications);
   return parsed.success ? parsed.data : defaultNotificationPreferences;
 }

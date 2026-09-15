@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/config/env";
+import { logger } from "@/lib/logger";
 
 const requestSchema = z.object({ email: z.string().email() });
 
@@ -14,10 +15,14 @@ export async function requestPasswordReset(input: unknown) {
 
   const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
 
-  // Always behave the same whether or not the account exists, to avoid leaking
-  // which emails are registered.
+  // Always return the same response whether or not the account exists —
+  // both to avoid leaking which emails are registered, and because the
+  // reset link itself must NEVER be returned to the caller: this endpoint
+  // has no authentication, so echoing the link back would let anyone reset
+  // any account's password (a full account-takeover primitive), directly
+  // contradicting the "always behave the same" comment this used to have.
   if (!user) {
-    return { success: true as const, resetUrl: null };
+    return { success: true as const };
   }
 
   const token = crypto.randomBytes(32).toString("hex");
@@ -29,11 +34,14 @@ export async function requestPasswordReset(input: unknown) {
 
   const resetUrl = `${env.appUrl}/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
 
-  // No transactional email provider is wired up in this build, so in demo
-  // mode we hand the link back to the caller instead of silently pretending
-  // an email was sent. Swap this for a real email send once a provider
-  // (Resend, Postmark, SES...) is configured.
-  return { success: true as const, resetUrl };
+  // No transactional email provider is wired up in this build. Until one is
+  // configured (Resend, Postmark, SES...), the link is only ever written to
+  // the server log — never returned in the response — so a developer/admin
+  // with log access can complete the flow in demo mode without opening an
+  // unauthenticated password-reset oracle to every visitor.
+  logger.info("password_reset_requested", { userId: user.id, resetUrl });
+
+  return { success: true as const };
 }
 
 const resetSchema = z.object({

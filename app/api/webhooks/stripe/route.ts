@@ -4,6 +4,7 @@ import { getStripeClient } from "@/lib/stripe/client";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/config/env";
 import { logActivity } from "@/lib/activity/log";
+import { logger } from "@/lib/logger";
 import type { SubscriptionPlan } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +32,11 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(body, signature, env.stripe.webhookSecret);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid signature";
+    logger.warn("stripe_webhook_signature_invalid", { error: message });
     return NextResponse.json({ error: `Webhook signature verification failed: ${message}` }, { status: 400 });
   }
+
+  logger.info("stripe_webhook_received", { type: event.type, id: event.id });
 
   switch (event.type) {
     case "checkout.session.completed": {

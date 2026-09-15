@@ -2,6 +2,7 @@ import "server-only";
 import type { AIJobType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { AIProviderError } from "@/lib/ai/types";
+import { logger } from "@/lib/logger";
 
 /**
  * Wraps an AI service call with an AIJob record so every generation has a
@@ -43,6 +44,7 @@ export async function runAIJob<T>(params: {
       where: { id: job.id },
       data: { status: "FAILED", error: message, finishedAt: new Date() },
     });
+    logger.error("ai_job_failed", { userId: params.userId, jobId: job.id, type: params.type, error: message });
     return { success: false, error: message, jobId: job.id };
   }
 }

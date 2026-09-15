@@ -7,6 +7,7 @@ import { verifyShopifyHmac, isValidShopDomain, exchangeCodeForToken } from "@/li
 import { verifyOAuthState } from "@/lib/shopify/state";
 import { encryptShopifyToken } from "@/lib/shopify/crypto";
 import { logActivity } from "@/lib/activity/log";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   const redirectTo = (path: string) => NextResponse.redirect(new URL(path, env.appUrl));
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
     });
 
     await logActivity({ userId: verifiedState.userId, action: "shopify_connected", entityType: "shopify_connection", entityId: shop });
+    logger.info("shopify_connected", { userId: verifiedState.userId, shop });
 
     return redirectTo("/shopify?connected=true");
   } catch (error) {
@@ -57,6 +59,7 @@ export async function GET(request: NextRequest) {
       create: { userId: verifiedState.userId, shopDomain: shop, status: "ERROR", lastError: message },
       update: { status: "ERROR", lastError: message },
     });
+    logger.error("shopify_connection_failed", { userId: verifiedState.userId, shop, error: message });
     return redirectTo("/shopify?error=connection_failed");
   }
 }

@@ -19,8 +19,8 @@ export default async function ProductsPage({
 
   const [products, categories, countries] = await Promise.all([
     searchProducts(filters, user.id),
-    getProductCategories(),
-    getProductCountries(),
+    getProductCategories(user.id),
+    getProductCountries(user.id),
   ]);
 
   return (

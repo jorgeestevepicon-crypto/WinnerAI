@@ -17,7 +17,7 @@ export default async function SettingsPage() {
   const [user, subscription, notificationPrefs] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: sessionUser.id } }),
     prisma.subscription.findUnique({ where: { userId: sessionUser.id } }),
-    getNotificationPreferences(sessionUser.id),
+    getNotificationPreferences(),
   ]);
 
   return (
