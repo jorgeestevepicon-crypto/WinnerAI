@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getProductById } from "@/features/products/server/queries";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,14 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               <div className="flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-3">
                   <h1 className="text-xl font-semibold">{product.title}</h1>
-                  <SaveButton productId={product.id} saved={product.saved} />
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/products/${product.id}/analysis`}>
+                        <Sparkles className="h-4 w-4" /> Analyze
+                      </Link>
+                    </Button>
+                    <SaveButton productId={product.id} saved={product.saved} />
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{product.description}</p>
                 <div className="flex flex-wrap gap-3 pt-2 text-sm">
