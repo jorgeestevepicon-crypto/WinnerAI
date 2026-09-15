@@ -55,6 +55,13 @@ export class ShopifyClient {
     return data.products;
   }
 
+  async listOrders(params: { createdAtMin?: string; limit?: number } = {}) {
+    const search = new URLSearchParams({ status: "any", limit: String(params.limit ?? 250) });
+    if (params.createdAtMin) search.set("created_at_min", params.createdAtMin);
+    const data = await this.request<{ orders: { total_price: string; created_at: string }[] }>(`/orders.json?${search.toString()}`);
+    return data.orders;
+  }
+
   async createProduct(input: ShopifyProductInput) {
     const data = await this.request<{ product: { id: number; handle: string } }>("/products.json", {
       method: "POST",

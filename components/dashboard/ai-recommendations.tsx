@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export function AIRecommendations() {
@@ -13,8 +15,13 @@ export function AIRecommendations() {
       <CardContent>
         <EmptyState
           icon={Sparkles}
-          title="The AI Growth Agent needs data first"
-          description="Once you have stores, ads or analytics connected, the Growth Agent will surface data-backed recommendations here."
+          title="Get data-backed recommendations"
+          description="The AI Growth Agent reviews your products, stores and campaigns and suggests next steps — it never acts on its own."
+          action={
+            <Button size="sm" className="mt-2" asChild>
+              <Link href="/analytics">Open Growth Agent</Link>
+            </Button>
+          }
         />
       </CardContent>
     </Card>
