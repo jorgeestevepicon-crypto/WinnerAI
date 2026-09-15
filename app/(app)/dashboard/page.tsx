@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const [stats, products, stores, ads, activity] = await Promise.all([
     getDashboardStats(user.id),
-    getTopProductOpportunities(),
+    getTopProductOpportunities(user.id),
     getRecentStores(user.id),
     getAdPerformanceSummary(user.id),
     getRecentActivity(user.id),

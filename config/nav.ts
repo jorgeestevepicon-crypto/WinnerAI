@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Settings, History } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search } from "lucide-react";
 
 export interface NavItem {
   title: string;
@@ -12,6 +12,7 @@ export interface NavItem {
 // sync with what actually exists avoids dead links in the sidebar.
 export const mainNav: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Product Finder", href: "/products", icon: Search },
   { title: "Activity", href: "/activity", icon: History },
 ];
 

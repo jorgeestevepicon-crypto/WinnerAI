@@ -22,9 +22,9 @@ export async function getDashboardStats(userId: string) {
   };
 }
 
-export async function getTopProductOpportunities(limit = 5) {
+export async function getTopProductOpportunities(userId: string, limit = 5) {
   return prisma.product.findMany({
-    where: { deletedAt: null, winningScore: { not: null } },
+    where: { userId, deletedAt: null, winningScore: { not: null } },
     orderBy: { winningScore: "desc" },
     take: limit,
   });

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, History } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -41,6 +41,9 @@ export function CommandPalette() {
         <CommandGroup heading="Navigate">
           <CommandItem onSelect={() => go("/dashboard")}>
             <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </CommandItem>
+          <CommandItem onSelect={() => go("/products")}>
+            <Search className="h-4 w-4" /> Product Finder
           </CommandItem>
           <CommandItem onSelect={() => go("/activity")}>
             <History className="h-4 w-4" /> Activity
