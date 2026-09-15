@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, History, Search } from "lucide-react";
+import { LayoutDashboard, Settings, History, Search, Store, Sparkles } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -44,6 +44,12 @@ export function CommandPalette() {
           </CommandItem>
           <CommandItem onSelect={() => go("/products")}>
             <Search className="h-4 w-4" /> Product Finder
+          </CommandItem>
+          <CommandItem onSelect={() => go("/store-builder")}>
+            <Sparkles className="h-4 w-4" /> Store Builder
+          </CommandItem>
+          <CommandItem onSelect={() => go("/stores")}>
+            <Store className="h-4 w-4" /> Stores
           </CommandItem>
           <CommandItem onSelect={() => go("/activity")}>
             <History className="h-4 w-4" /> Activity
