@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, Sparkles, Store } from "lucide-react";
+import { ArrowLeft, Package, Sparkles, Store, Megaphone } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getProductById } from "@/features/products/server/queries";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/store-builder?productId=${product.id}`}>
                         <Store className="h-4 w-4" /> Create Store
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/ads/new?productId=${product.id}`}>
+                        <Megaphone className="h-4 w-4" /> Generate Ads
                       </Link>
                     </Button>
                     <SaveButton productId={product.id} saved={product.saved} />
