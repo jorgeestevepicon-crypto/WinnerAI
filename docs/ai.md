@@ -51,6 +51,10 @@ Separate abstraction (`lib/ai/image-provider.ts`, `AIImageProvider`) since it do
 - **Demo**: renders a labeled SVG placeholder ("AI Generated — Demo placeholder") as a data URI — no network call, and it's honest about being a placeholder rather than a real photo.
 - **OpenAI (DALL-E)**: real image generation via `AI_IMAGE_PROVIDER=openai` + `AI_IMAGE_API_KEY`.
 
+Two features use this abstraction directly:
+- **Ad Studio creatives** (`features/ads/server/actions.ts#generateVariantImage`) — one image per ad variant, sized to the chosen platform format.
+- **Store Builder logos** (`lib/ai/services/brand.ts#generateBrandLogo`) — called automatically right after `generateBrand()` returns, using the brand's `logoConcept` text as the image prompt. Populates `StoreBrand.logoUrl`, shown in the editor's Brand panel and as a persistent header above the canvas preview. Never throws — a failed logo render just leaves `logoUrl` unset rather than blocking store generation. Regenerable on demand via `regenerateBrandLogo(storeId)`.
+
 ## AI safety rules enforced throughout
 
 - Every system prompt explicitly forbids fabricating reviews, testimonials, certifications, awards, or sales/revenue figures.
