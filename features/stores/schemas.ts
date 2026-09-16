@@ -5,6 +5,9 @@ export const storeBrandSchema = z.object({
   slogan: z.string(),
   description: z.string(),
   logoConcept: z.string(),
+  // Populated after generation by generateBrandLogo() — the AI text call
+  // that produces the fields above never returns an image itself.
+  logoUrl: z.string().optional(),
 });
 export type StoreBrand = z.infer<typeof storeBrandSchema>;
 

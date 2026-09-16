@@ -5,6 +5,11 @@ import type { StoreDocument, StoreSectionData, SectionType } from "@/features/st
 
 const MAX_HISTORY = 30;
 
+// Sentinel selectedSectionId value for the brand panel — brand isn't a
+// section in the document.sections array, but reuses the same
+// select/settings-panel plumbing as a section would.
+export const BRAND_PANEL_ID = "__brand__";
+
 export interface EditorVersionEntry {
   version: number;
   createdBy: string;
@@ -26,6 +31,7 @@ interface EditorState {
   selectSection: (id: string | null) => void;
   setDevice: (device: EditorState["device"]) => void;
   updateSectionSettings: (id: string, settings: Record<string, unknown>) => void;
+  updateBrand: (patch: Partial<StoreDocument["brand"]>) => void;
   moveSection: (id: string, direction: "up" | "down") => void;
   toggleHidden: (id: string) => void;
   duplicateSection: (id: string) => void;
@@ -88,6 +94,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { document, setDocument } = get();
     const sections = document.sections.map((s) => (s.id === id ? ({ ...s, settings: { ...s.settings, ...settings } } as StoreSectionData) : s));
     setDocument({ ...document, sections });
+  },
+
+  updateBrand: (patch) => {
+    const { document, setDocument } = get();
+    setDocument({ ...document, brand: { ...document.brand, ...patch } });
   },
 
   moveSection: (id, direction) => {

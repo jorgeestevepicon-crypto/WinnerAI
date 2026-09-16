@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus } from "lucide-react";
+import Image from "next/image";
+import { ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/features/stores/components/store-editor/editor-store";
+import { useEditorStore, BRAND_PANEL_ID } from "@/features/stores/components/store-editor/editor-store";
 import type { SectionType } from "@/features/stores/schemas";
 
 const SECTION_LABELS: Record<SectionType, string> = {
@@ -38,6 +39,21 @@ export function SidebarSections() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-1 overflow-y-auto p-3">
+        <div
+          onClick={() => selectSection(BRAND_PANEL_ID)}
+          className={cn(
+            "flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm",
+            selectedSectionId === BRAND_PANEL_ID ? "border-primary bg-accent" : "hover:bg-accent/50"
+          )}
+        >
+          {document.brand.logoUrl ? (
+            <Image src={document.brand.logoUrl} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-cover" unoptimized />
+          ) : (
+            <Palette className="h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="truncate font-medium">Brand</span>
+        </div>
+        <div className="my-2 border-t" />
         {document.sections.map((section, index) => (
           <div
             key={section.id}

@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/features/stores/components/store-editor/editor-store";
+import { useEditorStore, BRAND_PANEL_ID } from "@/features/stores/components/store-editor/editor-store";
 import { SectionRenderer } from "@/features/stores/components/store-editor/section-renderer";
 
 const DEVICE_WIDTH: Record<string, string> = {
@@ -21,6 +22,24 @@ export function Canvas() {
   return (
     <div className="flex h-full justify-center overflow-y-auto bg-muted/40 p-6">
       <div className={cn("mx-auto min-h-full rounded-lg border bg-white shadow-sm transition-all", DEVICE_WIDTH[device])}>
+        <div
+          onClick={() => selectSection(BRAND_PANEL_ID)}
+          className={cn(
+            "flex cursor-pointer items-center gap-2 border-b px-4 py-3 outline outline-2 outline-transparent hover:outline-primary/40",
+            selectedSectionId === BRAND_PANEL_ID && "outline-primary"
+          )}
+        >
+          {document.brand.logoUrl ? (
+            <Image src={document.brand.logoUrl} alt={`${document.brand.name} logo`} width={28} height={28} className="h-7 w-7 rounded object-cover" unoptimized />
+          ) : (
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-muted text-[10px] font-semibold text-muted-foreground">
+              {document.brand.name.slice(0, 1).toUpperCase() || "?"}
+            </div>
+          )}
+          <span className="text-sm font-semibold" style={{ color: document.theme.primaryColor }}>
+            {document.brand.name || "Untitled brand"}
+          </span>
+        </div>
         {visibleSections.length === 0 ? (
           <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">No visible sections</div>
         ) : (

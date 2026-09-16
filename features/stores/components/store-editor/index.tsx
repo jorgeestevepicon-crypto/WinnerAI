@@ -6,8 +6,9 @@ import { Toolbar } from "@/features/stores/components/store-editor/toolbar";
 import { SidebarSections } from "@/features/stores/components/store-editor/sidebar-sections";
 import { Canvas } from "@/features/stores/components/store-editor/canvas";
 import { SettingsPanel } from "@/features/stores/components/store-editor/settings-panel";
+import { BrandSettingsPanel } from "@/features/stores/components/store-editor/brand-settings-panel";
 import { AIChatPanel } from "@/features/stores/components/store-editor/ai-chat-panel";
-import { useEditorStore, type EditorVersionEntry } from "@/features/stores/components/store-editor/editor-store";
+import { useEditorStore, BRAND_PANEL_ID, type EditorVersionEntry } from "@/features/stores/components/store-editor/editor-store";
 import { updateStoreDocument } from "@/features/stores/server/actions";
 import type { StoreDocument } from "@/features/stores/schemas";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -80,7 +81,9 @@ export function StoreEditor({
         <Canvas />
         <div className="flex flex-col border-l">
           <div className="flex-1 overflow-y-auto border-b p-4">
-            {selectedSection ? (
+            {selectedSectionId === BRAND_PANEL_ID ? (
+              <BrandSettingsPanel storeId={storeId} />
+            ) : selectedSection ? (
               <SettingsPanel section={selectedSection} />
             ) : (
               <EmptyState icon={MousePointerClick} title="No section selected" description="Click a section in the canvas or the list to edit it." />

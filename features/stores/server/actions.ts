@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { runAIJob } from "@/lib/ai/job-runner";
-import { generateBrand } from "@/lib/ai/services/brand";
+import { generateBrand, generateBrandLogo } from "@/lib/ai/services/brand";
 import { generateStoreContent } from "@/lib/ai/services/store";
 import { generateStoreEdit } from "@/lib/ai/services/store-edit";
 import { storeBuilderInputSchema, storeDocumentSchema, type StoreDocument } from "@/features/stores/schemas";
@@ -56,6 +56,7 @@ export async function generateStore(input: unknown) {
         tone: parsed.data.tone,
         style: parsed.data.style,
       });
+      brand.logoUrl = await generateBrandLogo(brand);
 
       const content = await generateStoreContent({
         brand,
@@ -188,6 +189,28 @@ export async function applyStoreAIEdit(storeId: string, instruction: string) {
       })),
     }),
   ]);
+
+  const newVersion = await persistStoreVersion(storeId, document, "ai");
+  revalidatePath(`/stores/${storeId}`);
+  return { success: true as const, document, version: newVersion };
+}
+
+export async function regenerateBrandLogo(storeId: string) {
+  const user = await requireUser();
+  const store = await prisma.store.findFirst({ where: { id: storeId, userId: user.id } });
+  if (!store) return { success: false as const, error: "Store not found" };
+
+  const currentDocument = storeDocumentSchema.parse(store.document);
+
+  const logoUrl = await generateBrandLogo(currentDocument.brand);
+  if (!logoUrl) return { success: false as const, error: "Logo generation failed" };
+
+  const document: StoreDocument = { ...currentDocument, brand: { ...currentDocument.brand, logoUrl } };
+
+  await prisma.store.update({
+    where: { id: storeId },
+    data: { brand: document.brand as unknown as Prisma.InputJsonValue, document: document as unknown as Prisma.InputJsonValue },
+  });
 
   const newVersion = await persistStoreVersion(storeId, document, "ai");
   revalidatePath(`/stores/${storeId}`);

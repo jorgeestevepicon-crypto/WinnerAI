@@ -1,4 +1,5 @@
 import { getAIProvider, registerDemoGenerator } from "@/lib/ai";
+import { getAIImageProvider } from "@/lib/ai/image-provider";
 import { storeBrandSchema, type StoreBrand } from "@/features/stores/schemas";
 
 export interface BrandInput {
@@ -49,4 +50,26 @@ export async function generateBrand(input: BrandInput): Promise<StoreBrand> {
     prompt: buildPrompt(input),
     input,
   });
+}
+
+/**
+ * Renders `logoConcept` as an actual image via the image provider abstraction
+ * (the same one the Ad Studio uses) — demo mode gets a labeled SVG
+ * placeholder, a configured AI_IMAGE_PROVIDER gets a real generated image.
+ * Never throws: a failed logo render shouldn't block store generation, so
+ * callers get `undefined` and the UI falls back to a text wordmark.
+ */
+export async function generateBrandLogo(brand: Pick<StoreBrand, "name" | "logoConcept">): Promise<string | undefined> {
+  try {
+    const imageProvider = getAIImageProvider();
+    const result = await imageProvider.generateImage({
+      prompt: `Minimal logo mark for the brand "${brand.name}". ${brand.logoConcept} Flat vector style, transparent-friendly, no photographic elements, no text other than the brand name itself.`,
+      width: 512,
+      height: 512,
+      label: brand.name,
+    });
+    return result.url;
+  } catch {
+    return undefined;
+  }
 }
