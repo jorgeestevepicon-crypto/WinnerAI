@@ -49,29 +49,37 @@ export async function generateStore(input: unknown) {
     type: "STORE_GENERATION",
     input: { storeId: store.id, ...parsed.data },
     run: async () => {
-      const brand = await generateBrand({
-        productTitle: product.title,
-        category: product.category,
-        positioning: parsed.data.positioning,
-        tone: parsed.data.tone,
-        style: parsed.data.style,
-      });
-      brand.logoUrl = await generateBrandLogo(brand);
+      const forceDemo = parsed.data.generationMode === "demo";
 
-      const content = await generateStoreContent({
-        brand,
-        productTitle: product.title,
-        productDescription: product.description,
-        category: product.category,
-        price: product.price,
-        currency: product.currency,
-        positioning: parsed.data.positioning,
-        tone: parsed.data.tone,
-        style: parsed.data.style,
-        marketingAngles: analysis?.marketingAngles,
-        advantages: analysis?.advantages,
-        objections: analysis?.objections,
-      });
+      const brand = await generateBrand(
+        {
+          productTitle: product.title,
+          category: product.category,
+          positioning: parsed.data.positioning,
+          tone: parsed.data.tone,
+          style: parsed.data.style,
+        },
+        { forceDemo }
+      );
+      brand.logoUrl = await generateBrandLogo(brand, { forceDemo });
+
+      const content = await generateStoreContent(
+        {
+          brand,
+          productTitle: product.title,
+          productDescription: product.description,
+          category: product.category,
+          price: product.price,
+          currency: product.currency,
+          positioning: parsed.data.positioning,
+          tone: parsed.data.tone,
+          style: parsed.data.style,
+          marketingAngles: analysis?.marketingAngles,
+          advantages: analysis?.advantages,
+          objections: analysis?.objections,
+        },
+        { forceDemo }
+      );
 
       const document: StoreDocument = { brand, theme: content.theme, sections: content.sections };
       return document;

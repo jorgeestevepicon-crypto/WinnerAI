@@ -41,8 +41,8 @@ Visual style: ${input.style}
 Return a brand name, a short slogan, a one-paragraph description, and a text description of a logo concept (not an image). Never claim awards, certifications or customer counts that aren't provided.`;
 }
 
-export async function generateBrand(input: BrandInput): Promise<StoreBrand> {
-  const provider = getAIProvider();
+export async function generateBrand(input: BrandInput, options?: { forceDemo?: boolean }): Promise<StoreBrand> {
+  const provider = getAIProvider(options);
   return provider.generateObject({
     taskId: "brand",
     schema: storeBrandSchema,
@@ -59,9 +59,12 @@ export async function generateBrand(input: BrandInput): Promise<StoreBrand> {
  * Never throws: a failed logo render shouldn't block store generation, so
  * callers get `undefined` and the UI falls back to a text wordmark.
  */
-export async function generateBrandLogo(brand: Pick<StoreBrand, "name" | "logoConcept">): Promise<string | undefined> {
+export async function generateBrandLogo(
+  brand: Pick<StoreBrand, "name" | "logoConcept">,
+  options?: { forceDemo?: boolean }
+): Promise<string | undefined> {
   try {
-    const imageProvider = getAIImageProvider();
+    const imageProvider = getAIImageProvider(options);
     const result = await imageProvider.generateImage({
       prompt: `Minimal logo mark for the brand "${brand.name}". ${brand.logoConcept} Flat vector style, transparent-friendly, no photographic elements, no text other than the brand name itself.`,
       width: 512,

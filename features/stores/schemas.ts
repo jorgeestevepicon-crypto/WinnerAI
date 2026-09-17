@@ -119,5 +119,6 @@ export const storeBuilderInputSchema = z.object({
   style: z.enum(["minimal", "premium", "bold", "playful", "editorial"]),
   tone: z.enum(["professional", "friendly", "playful", "luxury", "urgent"]),
   positioning: z.string().min(2),
+  generationMode: z.enum(["ai", "demo"]).default("ai"),
 });
 export type StoreBuilderInput = z.infer<typeof storeBuilderInputSchema>;

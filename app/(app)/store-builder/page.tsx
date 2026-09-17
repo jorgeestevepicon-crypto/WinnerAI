@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { integrations } from "@/config/env";
 import { StoreBuilderWizard } from "@/features/stores/components/store-builder-wizard";
 
 export const metadata = { title: "AI Store Builder" };
@@ -21,7 +22,7 @@ export default async function StoreBuilderPage({ searchParams }: { searchParams:
         <h1 className="text-2xl font-semibold tracking-tight">AI Store Builder</h1>
         <p className="text-sm text-muted-foreground">Generate a brand and homepage for one of your saved products.</p>
       </div>
-      <StoreBuilderWizard products={products} defaultProductId={searchParams.productId} />
+      <StoreBuilderWizard products={products} defaultProductId={searchParams.productId} aiConfigured={integrations.aiConfigured} />
     </div>
   );
 }

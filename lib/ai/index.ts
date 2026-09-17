@@ -5,7 +5,8 @@ import { demoAIProvider } from "@/lib/ai/providers/demo-provider";
 import { openAIProvider } from "@/lib/ai/providers/openai-provider";
 import { anthropicProvider } from "@/lib/ai/providers/anthropic-provider";
 
-export function getAIProvider(): AIProvider {
+export function getAIProvider(options?: { forceDemo?: boolean }): AIProvider {
+  if (options?.forceDemo) return demoAIProvider;
   if (env.ai.provider === "openai" && env.ai.apiKey) return openAIProvider;
   if (env.ai.provider === "anthropic" && env.ai.apiKey) return anthropicProvider;
   return demoAIProvider;

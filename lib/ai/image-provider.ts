@@ -84,7 +84,8 @@ const openAIImageProvider: AIImageProvider = {
   },
 };
 
-export function getAIImageProvider(): AIImageProvider {
+export function getAIImageProvider(options?: { forceDemo?: boolean }): AIImageProvider {
+  if (options?.forceDemo) return demoImageProvider;
   if (env.ai.imageProvider === "openai" && env.ai.imageApiKey) return openAIImageProvider;
   return demoImageProvider;
 }

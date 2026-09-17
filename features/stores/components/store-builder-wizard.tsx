@@ -31,7 +31,15 @@ const tones: { value: StoreBuilderInput["tone"]; label: string }[] = [
   { value: "urgent", label: "Urgent" },
 ];
 
-export function StoreBuilderWizard({ products, defaultProductId }: { products: Product[]; defaultProductId?: string }) {
+export function StoreBuilderWizard({
+  products,
+  defaultProductId,
+  aiConfigured,
+}: {
+  products: Product[];
+  defaultProductId?: string;
+  aiConfigured: boolean;
+}) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<Partial<StoreBuilderInput>>({
@@ -41,6 +49,7 @@ export function StoreBuilderWizard({ products, defaultProductId }: { products: P
     style: "minimal",
     tone: "friendly",
     positioning: "",
+    generationMode: aiConfigured ? "ai" : "demo",
   });
 
   const selectedProduct = products.find((p) => p.id === form.productId);
@@ -167,6 +176,36 @@ export function StoreBuilderWizard({ products, defaultProductId }: { products: P
             onChange={(e) => update("positioning", e.target.value)}
             placeholder="e.g. the smarter, more affordable way to..."
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">6. Generation mode</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <RadioGroup
+            value={form.generationMode}
+            onValueChange={(v) => update("generationMode", v as StoreBuilderInput["generationMode"])}
+            className="grid gap-2 sm:grid-cols-2"
+          >
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <RadioGroupItem value="ai" id="mode-ai" disabled={!aiConfigured} className="mt-1" />
+              <Label htmlFor="mode-ai" className={aiConfigured ? "cursor-pointer font-normal" : "cursor-not-allowed font-normal text-muted-foreground"}>
+                <span className="block font-medium text-foreground">Real AI</span>
+                <span className="text-xs text-muted-foreground">
+                  {aiConfigured ? "Uses your configured AI provider. Uses API credits." : "Not available — no AI provider configured yet."}
+                </span>
+              </Label>
+            </div>
+            <div className="flex items-start gap-2 rounded-md border p-3">
+              <RadioGroupItem value="demo" id="mode-demo" className="mt-1" />
+              <Label htmlFor="mode-demo" className="cursor-pointer font-normal">
+                <span className="block font-medium text-foreground">Demo</span>
+                <span className="text-xs text-muted-foreground">Free, deterministic example content. No AI cost.</span>
+              </Label>
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 

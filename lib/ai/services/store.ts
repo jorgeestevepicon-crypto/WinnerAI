@@ -141,8 +141,8 @@ Produce a theme (colors + fonts matching the style) and homepage sections: hero,
 Never invent customer reviews, testimonials, certifications, awards or sales numbers as if they were real.`;
 }
 
-export async function generateStoreContent(input: StoreContentInput): Promise<StoreContent> {
-  const provider = getAIProvider();
+export async function generateStoreContent(input: StoreContentInput, options?: { forceDemo?: boolean }): Promise<StoreContent> {
+  const provider = getAIProvider(options);
   return provider.generateObject({
     taskId: "store",
     schema: storeContentSchema,
