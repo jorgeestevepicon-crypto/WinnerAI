@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { StoreSectionData, StoreTheme } from "@/features/stores/schemas";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,14 +9,27 @@ export function SectionRenderer({ section, theme }: { section: StoreSectionData;
   switch (section.type) {
     case "hero":
       return (
-        <section className="px-8 py-16 text-center" style={{ backgroundColor: theme.backgroundColor }}>
-          <h1 className="mx-auto max-w-2xl text-3xl font-bold" style={headingStyle}>
-            {section.settings.headline}
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">{section.settings.subtitle}</p>
-          <button className="mt-6 rounded-full px-6 py-2 text-sm font-medium text-white" style={buttonStyle}>
-            {section.settings.ctaLabel}
-          </button>
+        <section className="relative overflow-hidden px-8 py-16 text-center" style={{ backgroundColor: theme.backgroundColor }}>
+          {section.settings.imageUrl && (
+            <>
+              <Image src={section.settings.imageUrl} alt="" fill className="object-cover" unoptimized />
+              <div className="absolute inset-0 bg-black/45" />
+            </>
+          )}
+          <div className="relative">
+            <h1
+              className="mx-auto max-w-2xl text-3xl font-bold"
+              style={section.settings.imageUrl ? { fontFamily: theme.headingFont, color: "#ffffff" } : headingStyle}
+            >
+              {section.settings.headline}
+            </h1>
+            <p className={`mx-auto mt-3 max-w-xl ${section.settings.imageUrl ? "text-white/90" : "text-muted-foreground"}`}>
+              {section.settings.subtitle}
+            </p>
+            <button className="mt-6 rounded-full px-6 py-2 text-sm font-medium text-white" style={buttonStyle}>
+              {section.settings.ctaLabel}
+            </button>
+          </div>
         </section>
       );
     case "benefits":
@@ -38,7 +52,13 @@ export function SectionRenderer({ section, theme }: { section: StoreSectionData;
       return (
         <section className="px-8 py-12" style={{ backgroundColor: theme.backgroundColor }}>
           <div className="mx-auto grid max-w-3xl gap-6 sm:grid-cols-2 sm:items-center">
-            <div className="flex h-40 items-center justify-center rounded-lg bg-muted text-muted-foreground">Product image</div>
+            {section.settings.imageUrl ? (
+              <div className="relative h-40 overflow-hidden rounded-lg">
+                <Image src={section.settings.imageUrl} alt={section.settings.title} fill className="object-cover" unoptimized />
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center rounded-lg bg-muted text-muted-foreground">Product image</div>
+            )}
             <div>
               <h2 className="text-xl font-semibold" style={headingStyle}>
                 {section.settings.title}

@@ -53,6 +53,7 @@ export const productSettingsSchema = z.object({
   description: z.string(),
   bullets: z.array(z.string()),
   ctaLabel: z.string(),
+  imageUrl: z.string().optional(),
 });
 
 export const socialProofSettingsSchema = z.object({

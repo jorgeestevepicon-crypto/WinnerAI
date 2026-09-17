@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { runAIJob } from "@/lib/ai/job-runner";
 import { generateBrand, generateBrandLogo } from "@/lib/ai/services/brand";
-import { generateStoreContent } from "@/lib/ai/services/store";
+import { generateStoreContent, generateHeroImage, generateProductImage } from "@/lib/ai/services/store";
 import { generateStoreEdit } from "@/lib/ai/services/store-edit";
 import { storeBuilderInputSchema, storeDocumentSchema, type StoreDocument } from "@/features/stores/schemas";
 
@@ -81,7 +81,21 @@ export async function generateStore(input: unknown) {
         { forceDemo }
       );
 
-      const document: StoreDocument = { brand, theme: content.theme, sections: content.sections };
+      const [heroImageUrl, productImageUrl] = await Promise.all([
+        generateHeroImage({ productTitle: product.title, category: product.category, style: parsed.data.style, tone: parsed.data.tone }, { forceDemo }),
+        generateProductImage(
+          { productTitle: product.title, productDescription: product.description, category: product.category, style: parsed.data.style },
+          { forceDemo }
+        ),
+      ]);
+
+      const sections = content.sections.map((section) => {
+        if (section.type === "hero" && heroImageUrl) return { ...section, settings: { ...section.settings, imageUrl: heroImageUrl } };
+        if (section.type === "product" && productImageUrl) return { ...section, settings: { ...section.settings, imageUrl: productImageUrl } };
+        return section;
+      });
+
+      const document: StoreDocument = { brand, theme: content.theme, sections };
       return document;
     },
   });

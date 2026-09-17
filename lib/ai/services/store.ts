@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAIProvider, registerDemoGenerator } from "@/lib/ai";
+import { getAIImageProvider } from "@/lib/ai/image-provider";
 import { storeThemeSchema, storeSectionSchema, type StoreTheme, type StoreSectionData, type StoreBrand } from "@/features/stores/schemas";
 
 export interface StoreContentInput {
@@ -127,6 +128,14 @@ registerDemoGenerator("store", (rawInput) => {
   return { theme: { ...STYLE_PALETTES[input.style], style: input.style }, sections } satisfies StoreContent;
 });
 
+const STYLE_DESIGN_BRIEFS: Record<StoreContentInput["style"], string> = {
+  minimal: "Minimal: near-monochrome (black/white/one grey), huge whitespace, a single restrained accent color, geometric sans-serif headings.",
+  premium: "Premium: dark or cream base, a metallic gold/bronze/copper accent, a serif display heading font, generous spacing — feels expensive.",
+  bold: "Bold: high-contrast saturated colors (e.g. red/black or orange/navy), a heavy grotesque or condensed heading font — feels loud and energetic.",
+  playful: "Playful: bright, warm, candy-like palette with at least two saturated hues, a rounded friendly heading font — feels fun and approachable.",
+  editorial: "Editorial: warm off-white or stone background, muted earthy accent, a literary serif heading font — feels like a print magazine.",
+};
+
 function buildPrompt(input: StoreContentInput) {
   return `Generate homepage content for an ecommerce store.
 
@@ -136,6 +145,10 @@ Positioning: ${input.positioning}
 Tone: ${input.tone}, visual style: ${input.style}
 Marketing angles: ${(input.marketingAngles ?? []).join("; ") || "N/A"}
 Advantages: ${(input.advantages ?? []).join("; ") || "N/A"}
+
+Design brief for the "${input.style}" style — commit to it strongly, don't default to safe blue/indigo corporate colors unless the brief calls for it:
+${STYLE_DESIGN_BRIEFS[input.style]}
+Pick real hex colors and real font family names (Google Fonts) that match that brief. Two stores in different styles should look nothing alike.
 
 Produce a theme (colors + fonts matching the style) and homepage sections: hero, benefits, product, socialProof (a clearly-labeled placeholder, never a fabricated review), faq, guarantee, cta, footer.
 Never invent customer reviews, testimonials, certifications, awards or sales numbers as if they were real.`;
@@ -151,4 +164,47 @@ export async function generateStoreContent(input: StoreContentInput, options?: {
     prompt: buildPrompt(input),
     input,
   });
+}
+
+/**
+ * Renders a hero background and a product shot via the image provider —
+ * demo mode gets a labeled SVG placeholder, real mode gets a generated
+ * image. Never throws: a failed render just leaves the section without an
+ * image rather than blocking store generation (same pattern as the brand
+ * logo).
+ */
+export async function generateHeroImage(
+  input: Pick<StoreContentInput, "productTitle" | "category" | "style" | "tone">,
+  options?: { forceDemo?: boolean }
+): Promise<string | undefined> {
+  try {
+    const imageProvider = getAIImageProvider(options);
+    const result = await imageProvider.generateImage({
+      prompt: `Wide hero banner photo for an ecommerce homepage selling ${input.productTitle} (${input.category ?? "general product"}). Visual style: ${input.style}, mood: ${input.tone}. Realistic product photography or lifestyle scene, no text, no logos.`,
+      width: 1600,
+      height: 900,
+      label: input.productTitle,
+    });
+    return result.url;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function generateProductImage(
+  input: Pick<StoreContentInput, "productTitle" | "productDescription" | "category" | "style">,
+  options?: { forceDemo?: boolean }
+): Promise<string | undefined> {
+  try {
+    const imageProvider = getAIImageProvider(options);
+    const result = await imageProvider.generateImage({
+      prompt: `Studio product photo of ${input.productTitle}. ${input.productDescription ?? ""} Category: ${input.category ?? "general product"}. Visual style: ${input.style}. Clean background, no text, no watermarks.`,
+      width: 800,
+      height: 800,
+      label: input.productTitle,
+    });
+    return result.url;
+  } catch {
+    return undefined;
+  }
 }
