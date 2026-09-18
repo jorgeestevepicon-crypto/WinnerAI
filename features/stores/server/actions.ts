@@ -9,7 +9,7 @@ import { runAIJob } from "@/lib/ai/job-runner";
 import { generateBrand, generateBrandLogo } from "@/lib/ai/services/brand";
 import { generateStoreContent, generateHeroImage, generateProductImage } from "@/lib/ai/services/store";
 import { generateStoreEdit } from "@/lib/ai/services/store-edit";
-import { storeBuilderInputSchema, storeDocumentSchema, type StoreDocument } from "@/features/stores/schemas";
+import { storeBuilderInputSchema, storeDocumentSchema, storeSettingsInputSchema, type StoreDocument } from "@/features/stores/schemas";
 
 async function persistStoreVersion(storeId: string, document: StoreDocument, createdBy: "user" | "ai") {
   const last = await prisma.storeVersion.findFirst({ where: { storeId }, orderBy: { version: "desc" } });
@@ -284,5 +284,23 @@ export async function deleteStore(storeId: string) {
   await logActivity({ userId: user.id, action: "store_deleted", entityType: "store", entityId: storeId });
 
   revalidatePath("/stores");
+  return { success: true as const };
+}
+
+export async function updateStoreSettings(storeId: string, input: unknown) {
+  const user = await requireUser();
+  const store = await prisma.store.findFirst({ where: { id: storeId, userId: user.id, deletedAt: null } });
+  if (!store) return { success: false as const, error: "Store not found" };
+
+  const parsed = storeSettingsInputSchema.safeParse(input);
+  if (!parsed.success) return { success: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await prisma.storeSettings.upsert({
+    where: { storeId },
+    create: { storeId, ...parsed.data },
+    update: parsed.data,
+  });
+
+  revalidatePath(`/stores/${storeId}`);
   return { success: true as const };
 }

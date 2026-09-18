@@ -7,10 +7,11 @@ import { SidebarSections } from "@/features/stores/components/store-editor/sideb
 import { Canvas } from "@/features/stores/components/store-editor/canvas";
 import { SettingsPanel } from "@/features/stores/components/store-editor/settings-panel";
 import { BrandSettingsPanel } from "@/features/stores/components/store-editor/brand-settings-panel";
+import { StoreSettingsPanel } from "@/features/stores/components/store-editor/store-settings-panel";
 import { AIChatPanel } from "@/features/stores/components/store-editor/ai-chat-panel";
-import { useEditorStore, BRAND_PANEL_ID, type EditorVersionEntry } from "@/features/stores/components/store-editor/editor-store";
+import { useEditorStore, BRAND_PANEL_ID, SETTINGS_PANEL_ID, type EditorVersionEntry } from "@/features/stores/components/store-editor/editor-store";
 import { updateStoreDocument } from "@/features/stores/server/actions";
-import type { StoreDocument } from "@/features/stores/schemas";
+import type { StoreDocument, StoreSettingsInput } from "@/features/stores/schemas";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MousePointerClick } from "lucide-react";
 
@@ -21,11 +22,13 @@ export function StoreEditor({
   storeName,
   initialDocument,
   initialVersions,
+  initialSettings,
 }: {
   storeId: string;
   storeName: string;
   initialDocument: StoreDocument;
   initialVersions: EditorVersionEntry[];
+  initialSettings: Partial<StoreSettingsInput>;
 }) {
   const document = useEditorStore((s) => s.document);
   const dirty = useEditorStore((s) => s.dirty);
@@ -83,6 +86,8 @@ export function StoreEditor({
           <div className="flex-1 overflow-y-auto border-b p-4">
             {selectedSectionId === BRAND_PANEL_ID ? (
               <BrandSettingsPanel storeId={storeId} />
+            ) : selectedSectionId === SETTINGS_PANEL_ID ? (
+              <StoreSettingsPanel storeId={storeId} initialSettings={initialSettings} />
             ) : selectedSection ? (
               <SettingsPanel section={selectedSection} />
             ) : (

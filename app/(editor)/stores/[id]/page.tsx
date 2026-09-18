@@ -35,6 +35,21 @@ export default async function StoreEditorPage({ params }: { params: { id: string
 
   const document = storeDocumentSchema.parse(store.document);
   const versions = store.versions.map((v) => ({ version: v.version, createdBy: v.createdBy ?? "user", createdAt: v.createdAt }));
+  const initialSettings = {
+    seoTitle: store.settings?.seoTitle ?? undefined,
+    seoDescription: store.settings?.seoDescription ?? undefined,
+    shippingPolicy: store.settings?.shippingPolicy ?? undefined,
+    returnPolicy: store.settings?.returnPolicy ?? undefined,
+    privacyPolicy: store.settings?.privacyPolicy ?? undefined,
+  };
 
-  return <StoreEditor storeId={store.id} storeName={store.name} initialDocument={document} initialVersions={versions} />;
+  return (
+    <StoreEditor
+      storeId={store.id}
+      storeName={store.name}
+      initialDocument={document}
+      initialVersions={versions}
+      initialSettings={initialSettings}
+    />
+  );
 }

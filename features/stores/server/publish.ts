@@ -47,7 +47,11 @@ export async function getPublishChecklist(storeId: string): Promise<{ items: Pub
     { key: "price", label: "Price", complete: !!store.product?.price },
     { key: "variants", label: "Variants", complete: true },
     { key: "shipping", label: "Shipping configured", complete: store.product?.shippingCost !== null },
-    { key: "policies", label: "Store policies", complete: false },
+    {
+      key: "policies",
+      label: "Store policies",
+      complete: !!(store.settings?.shippingPolicy && store.settings?.returnPolicy && store.settings?.privacyPolicy),
+    },
     { key: "theme", label: "Theme colors", complete: !!document.theme.primaryColor },
     { key: "seo", label: "SEO title & description", complete: !!(store.settings?.seoTitle && store.settings?.seoDescription) },
   ];

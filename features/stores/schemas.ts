@@ -123,3 +123,12 @@ export const storeBuilderInputSchema = z.object({
   generationMode: z.enum(["ai", "demo"]).default("ai"),
 });
 export type StoreBuilderInput = z.infer<typeof storeBuilderInputSchema>;
+
+export const storeSettingsInputSchema = z.object({
+  seoTitle: z.string().max(70).optional(),
+  seoDescription: z.string().max(160).optional(),
+  shippingPolicy: z.string().optional(),
+  returnPolicy: z.string().optional(),
+  privacyPolicy: z.string().optional(),
+});
+export type StoreSettingsInput = z.infer<typeof storeSettingsInputSchema>;

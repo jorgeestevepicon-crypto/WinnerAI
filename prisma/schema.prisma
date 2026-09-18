@@ -315,6 +315,10 @@ model StoreSettings {
   customDomain   String?
   analyticsId    String?
 
+  shippingPolicy String?
+  returnPolicy   String?
+  privacyPolicy  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

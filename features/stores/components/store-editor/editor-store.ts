@@ -10,6 +10,11 @@ const MAX_HISTORY = 30;
 // select/settings-panel plumbing as a section would.
 export const BRAND_PANEL_ID = "__brand__";
 
+// Sentinel selectedSectionId value for the store settings panel (SEO,
+// policies) — these live in the separate StoreSettings table, not the
+// document JSON, but reuse the same select/settings-panel plumbing.
+export const SETTINGS_PANEL_ID = "__settings__";
+
 export interface EditorVersionEntry {
   version: number;
   createdBy: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Palette } from "lucide-react";
+import { ArrowUp, ArrowDown, Copy, Trash2, Eye, EyeOff, Plus, Palette, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useEditorStore, BRAND_PANEL_ID } from "@/features/stores/components/store-editor/editor-store";
+import { useEditorStore, BRAND_PANEL_ID, SETTINGS_PANEL_ID } from "@/features/stores/components/store-editor/editor-store";
 import type { SectionType } from "@/features/stores/schemas";
 
 const SECTION_LABELS: Record<SectionType, string> = {
@@ -52,6 +52,16 @@ export function SidebarSections() {
             <Palette className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
           <span className="truncate font-medium">Brand</span>
+        </div>
+        <div
+          onClick={() => selectSection(SETTINGS_PANEL_ID)}
+          className={cn(
+            "flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm",
+            selectedSectionId === SETTINGS_PANEL_ID ? "border-primary bg-accent" : "hover:bg-accent/50"
+          )}
+        >
+          <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate font-medium">Store settings</span>
         </div>
         <div className="my-2 border-t" />
         {document.sections.map((section, index) => (
