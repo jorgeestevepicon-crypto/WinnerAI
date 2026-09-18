@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { updateStoreSettings } from "@/features/stores/server/actions";
+import { updateStoreSettings, generateStoreSeoFields } from "@/features/stores/server/actions";
 import type { StoreSettingsInput } from "@/features/stores/schemas";
 
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
@@ -29,9 +29,23 @@ export function StoreSettingsPanel({ storeId, initialSettings }: { storeId: stri
     privacyPolicy: initialSettings.privacyPolicy ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   function update<K extends keyof StoreSettingsInput>(key: K, value: StoreSettingsInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleGenerateSeo() {
+    setGeneratingSeo(true);
+    const result = await generateStoreSeoFields(storeId);
+    setGeneratingSeo(false);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    setForm((prev) => ({ ...prev, seoTitle: result.seo.seoTitle, seoDescription: result.seo.seoDescription }));
+    toast.success("SEO title & description generated");
   }
 
   async function handleSave() {
@@ -49,7 +63,13 @@ export function StoreSettingsPanel({ storeId, initialSettings }: { storeId: stri
   return (
     <div className="space-y-5">
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold">SEO</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">SEO</h3>
+          <Button variant="outline" size="sm" onClick={handleGenerateSeo} disabled={generatingSeo}>
+            {generatingSeo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            Generate with AI
+          </Button>
+        </div>
         <Field label="SEO title" hint="Shown in search results and browser tabs. Aim for under 70 characters.">
           <Input value={form.seoTitle} onChange={(e) => update("seoTitle", e.target.value)} maxLength={70} />
         </Field>

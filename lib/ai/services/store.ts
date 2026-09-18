@@ -208,3 +208,41 @@ export async function generateProductImage(
     return undefined;
   }
 }
+
+export interface StoreSeoInput {
+  brandName: string;
+  productTitle: string;
+  productDescription: string | null;
+  category: string | null;
+}
+
+export const storeSeoSchema = z.object({
+  seoTitle: z.string().max(70),
+  seoDescription: z.string().max(160),
+});
+export type StoreSeo = z.infer<typeof storeSeoSchema>;
+
+registerDemoGenerator("store_seo", (rawInput) => {
+  const input = rawInput as StoreSeoInput;
+  const category = input.category ?? "products";
+  return {
+    seoTitle: `${input.brandName} | ${input.productTitle}`.slice(0, 70),
+    seoDescription: `Shop ${input.productTitle} at ${input.brandName}. Quality ${category.toLowerCase()} built for everyday use.`.slice(0, 160),
+  } satisfies StoreSeo;
+});
+
+export async function generateStoreSeo(input: StoreSeoInput, options?: { forceDemo?: boolean }): Promise<StoreSeo> {
+  const provider = getAIProvider(options);
+  return provider.generateObject({
+    taskId: "store_seo",
+    schema: storeSeoSchema,
+    system:
+      "You are an ecommerce SEO copywriter. Write concise, honest search-engine metadata — never invent claims, certifications, or numbers that aren't given to you.",
+    prompt: `Write an SEO title (max 70 characters) and SEO meta description (max 160 characters) for an online store.
+
+Brand: ${input.brandName}
+Product: ${input.productTitle} (${input.category ?? "general product"})
+${input.productDescription ? `Description: ${input.productDescription}` : ""}`,
+    input,
+  });
+}

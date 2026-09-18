@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { runAIJob } from "@/lib/ai/job-runner";
 import { generateBrand, generateBrandLogo } from "@/lib/ai/services/brand";
-import { generateStoreContent, generateHeroImage, generateProductImage } from "@/lib/ai/services/store";
+import { generateStoreContent, generateHeroImage, generateProductImage, generateStoreSeo } from "@/lib/ai/services/store";
 import { generateStoreEdit } from "@/lib/ai/services/store-edit";
 import { storeBuilderInputSchema, storeDocumentSchema, storeSettingsInputSchema, type StoreDocument } from "@/features/stores/schemas";
 
@@ -285,6 +285,35 @@ export async function deleteStore(storeId: string) {
 
   revalidatePath("/stores");
   return { success: true as const };
+}
+
+export async function generateStoreSeoFields(storeId: string) {
+  const user = await requireUser();
+  const store = await prisma.store.findFirst({ where: { id: storeId, userId: user.id, deletedAt: null }, include: { product: true } });
+  if (!store) return { success: false as const, error: "Store not found" };
+
+  const document = storeDocumentSchema.parse(store.document);
+
+  try {
+    const seo = await generateStoreSeo({
+      brandName: document.brand.name || store.name,
+      productTitle: store.product?.title ?? store.name,
+      productDescription: store.product?.description ?? null,
+      category: store.product?.category ?? null,
+    });
+
+    await prisma.storeSettings.upsert({
+      where: { storeId },
+      create: { storeId, seoTitle: seo.seoTitle, seoDescription: seo.seoDescription },
+      update: { seoTitle: seo.seoTitle, seoDescription: seo.seoDescription },
+    });
+
+    revalidatePath(`/stores/${storeId}`);
+    return { success: true as const, seo };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "SEO generation failed";
+    return { success: false as const, error: message };
+  }
 }
 
 export async function updateStoreSettings(storeId: string, input: unknown) {

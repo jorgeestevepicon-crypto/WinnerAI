@@ -11,7 +11,8 @@ export type AITaskId =
   | "video_concept"
   | "storyboard"
   | "growth_recommendations"
-  | "store_ai_edit";
+  | "store_ai_edit"
+  | "store_seo";
 
 export interface GenerateObjectParams<T> {
   taskId: AITaskId;
