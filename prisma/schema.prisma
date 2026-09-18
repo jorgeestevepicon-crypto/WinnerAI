@@ -257,7 +257,8 @@ model Store {
   locale     String      @default("en")
   country    String?
 
-  shopifyDomain String?
+  shopifyDomain    String?
+  shopifyProductId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

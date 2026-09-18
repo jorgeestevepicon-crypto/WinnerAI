@@ -79,21 +79,29 @@ export async function publishStoreToShopify(storeId: string, shopifyConnectionId
     const accessToken = decryptShopifyToken(connection.accessTokenEncrypted);
     const client = new ShopifyClient(connection.shopDomain, accessToken);
 
-    const shopifyProduct = await client.createProduct({
+    const productInput = {
       title: document.brand.name || store.product.title,
       bodyHtml: `<p>${description}</p>`,
       vendor: document.brand.name,
       productType: store.product.category ?? undefined,
       images: (store.product.images.length > 0 ? store.product.images : getFallbackImageUrls(document)).map((src) => ({ src })),
       variants: [{ price: String(store.product.price ?? 0), sku: store.product.id }],
-      status: "draft",
-    });
+      status: "draft" as const,
+    };
+
+    // Republishing the same store updates the product it already created
+    // in Shopify instead of creating a duplicate every time.
+    const existingProductId = store.shopifyProductId && store.shopifyDomain === connection.shopDomain ? Number(store.shopifyProductId) : null;
+
+    const shopifyProduct = existingProductId
+      ? await client.updateProduct(existingProductId, productInput)
+      : await client.createProduct(productInput);
 
     await client.publishProduct(shopifyProduct.id);
 
     await prisma.store.update({
       where: { id: storeId },
-      data: { status: "PUBLISHED", shopifyDomain: connection.shopDomain },
+      data: { status: "PUBLISHED", shopifyDomain: connection.shopDomain, shopifyProductId: String(shopifyProduct.id) },
     });
 
     await logActivity({ userId: user.id, action: "store_published", entityType: "store", entityId: storeId, metadata: { shop: connection.shopDomain } });

@@ -90,6 +90,9 @@ export class ShopifyClient {
           ...(input.title && { title: input.title }),
           ...(input.bodyHtml && { body_html: input.bodyHtml }),
           ...(input.status && { status: input.status }),
+          ...(input.vendor && { vendor: input.vendor }),
+          ...(input.productType && { product_type: input.productType }),
+          ...(input.images && { images: input.images }),
         },
       }),
     });
