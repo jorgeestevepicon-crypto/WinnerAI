@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DeleteStoreButton } from "@/features/stores/components/delete-store-button";
 import { relativeTime } from "@/lib/utils";
 
 export const metadata = { title: "Stores" };
@@ -50,18 +51,23 @@ export default async function StoresPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stores.map((store) => (
-            <Link key={store.id} href={`/stores/${store.id}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
-                <CardContent className="space-y-2 p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="truncate font-medium">{store.name}</p>
-                    <Badge variant={statusVariant[store.status] ?? "outline"}>{store.status}</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{store.product?.title ?? "No linked product"}</p>
-                  <p className="text-xs text-muted-foreground">Updated {relativeTime(store.updatedAt)}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <div key={store.id} className="relative">
+              <Link href={`/stores/${store.id}`} className="block h-full">
+                <Card className="h-full transition-shadow hover:shadow-md">
+                  <CardContent className="space-y-2 p-4">
+                    <div className="flex items-center justify-between gap-2 pr-8">
+                      <p className="truncate font-medium">{store.name}</p>
+                      <Badge variant={statusVariant[store.status] ?? "outline"}>{store.status}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{store.product?.title ?? "No linked product"}</p>
+                    <p className="text-xs text-muted-foreground">Updated {relativeTime(store.updatedAt)}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <div className="absolute right-2 top-2">
+                <DeleteStoreButton storeId={store.id} storeName={store.name} />
+              </div>
+            </div>
           ))}
         </div>
       )}

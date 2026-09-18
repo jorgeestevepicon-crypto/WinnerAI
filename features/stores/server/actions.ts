@@ -274,3 +274,15 @@ export async function restoreStoreVersion(storeId: string, version: number) {
   revalidatePath(`/stores/${storeId}`);
   return { success: true as const, document, version: newVersion };
 }
+
+export async function deleteStore(storeId: string) {
+  const user = await requireUser();
+  const store = await prisma.store.findFirst({ where: { id: storeId, userId: user.id, deletedAt: null } });
+  if (!store) return { success: false as const, error: "Store not found" };
+
+  await prisma.store.update({ where: { id: storeId }, data: { deletedAt: new Date() } });
+  await logActivity({ userId: user.id, action: "store_deleted", entityType: "store", entityId: storeId });
+
+  revalidatePath("/stores");
+  return { success: true as const };
+}

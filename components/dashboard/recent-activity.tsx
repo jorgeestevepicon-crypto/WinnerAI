@@ -1,4 +1,4 @@
-import { History, Search, Store, Megaphone, ShoppingBag, Bookmark, CreditCard } from "lucide-react";
+import { History, Search, Store, Megaphone, ShoppingBag, Bookmark, CreditCard, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { relativeTime } from "@/lib/utils";
@@ -11,6 +11,7 @@ const actionCopy: Record<ActivityAction, { label: string; icon: typeof History }
   store_created: { label: "Created a store", icon: Store },
   store_updated: { label: "Updated a store", icon: Store },
   store_published: { label: "Published a store to Shopify", icon: ShoppingBag },
+  store_deleted: { label: "Deleted a store", icon: Trash2 },
   ad_generated: { label: "Generated an ad", icon: Megaphone },
   ad_saved: { label: "Saved an ad", icon: Megaphone },
   shopify_connected: { label: "Connected Shopify", icon: ShoppingBag },
