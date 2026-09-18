@@ -105,7 +105,7 @@ export function PublishFlow({
               <div className="space-y-2">
                 {STAGES.map((stage, i) => (
                   <div key={stage} className="flex items-center gap-2 text-sm">
-                    {i < stageIndex ? (
+                    {i < stageIndex || (i === stageIndex && i === STAGES.length - 1) ? (
                       <Check className="h-4 w-4 text-success" />
                     ) : i === stageIndex ? (
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -120,7 +120,10 @@ export function PublishFlow({
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button onClick={handlePublish} disabled={!connectionId || stageIndex !== null || !readyToPublish}>
+            <Button
+              onClick={handlePublish}
+              disabled={!connectionId || !readyToPublish || (stageIndex !== null && stageIndex < STAGES.length - 1)}
+            >
               {stageIndex !== null && stageIndex < STAGES.length - 1 ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
