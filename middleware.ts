@@ -7,7 +7,7 @@ import { authConfig } from "@/auth.config";
 // from auth.ts instead.
 const { auth } = NextAuth(authConfig);
 
-const PROTECTED_PREFIXES = ["/dashboard", "/products", "/store-builder", "/stores", "/ads", "/shopify", "/analytics", "/billing", "/settings", "/activity", "/admin", "/onboarding"];
+const PROTECTED_PREFIXES = ["/dashboard", "/products", "/store-builder", "/stores", "/orders", "/ads", "/shopify", "/analytics", "/billing", "/settings", "/activity", "/admin", "/onboarding"];
 const ADMIN_PREFIXES = ["/admin"];
 
 export default auth((req) => {

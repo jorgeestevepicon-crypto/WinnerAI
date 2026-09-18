@@ -15,6 +15,7 @@ const actionLabels: Record<ActivityAction, string> = {
   store_updated: "Updated a store",
   store_published: "Published a store to Shopify",
   store_deleted: "Deleted a store",
+  store_order_paid: "Received a store order",
   ad_generated: "Generated an ad",
   ad_saved: "Saved an ad",
   shopify_connected: "Connected Shopify",

@@ -269,6 +269,7 @@ model Store {
   sections StoreSection[]
   versions StoreVersion[]
   settings StoreSettings?
+  orders   StoreOrder[]
 
   @@index([userId])
   @@index([productId])
@@ -324,6 +325,46 @@ model StoreSettings {
   updatedAt DateTime @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Store orders (WinnerAI's own storefront checkout — Stripe, not Shopify)
+// ---------------------------------------------------------------------------
+
+enum StoreOrderStatus {
+  PENDING
+  PAID
+  CANCELED
+  REFUNDED
+}
+
+model StoreOrder {
+  id     String @id @default(cuid())
+  storeId String
+  userId  String // store owner, denormalized for fast dashboard queries
+
+  productTitle String
+  quantity     Int
+  unitPrice    Float
+  currency     String
+  totalAmount  Float
+
+  customerEmail   String
+  customerName    String?
+  shippingAddress Json?
+
+  status StoreOrderStatus @default(PENDING)
+
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------

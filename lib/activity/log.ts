@@ -8,6 +8,7 @@ export type ActivityAction =
   | "store_updated"
   | "store_published"
   | "store_deleted"
+  | "store_order_paid"
   | "ad_generated"
   | "ad_saved"
   | "shopify_connected"

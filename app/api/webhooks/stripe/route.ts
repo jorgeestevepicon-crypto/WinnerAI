@@ -42,6 +42,34 @@ export async function POST(request: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
+
+      if (session.metadata?.type === "store_order") {
+        const { storeId, productTitle, quantity, unitPrice, currency } = session.metadata;
+        if (storeId && userId && productTitle && quantity && unitPrice && currency) {
+          await prisma.storeOrder.upsert({
+            where: { stripeCheckoutSessionId: session.id },
+            create: {
+              storeId,
+              userId,
+              productTitle,
+              quantity: Number(quantity),
+              unitPrice: Number(unitPrice),
+              currency,
+              totalAmount: (session.amount_total ?? 0) / 100,
+              customerEmail: session.customer_details?.email ?? "unknown@unknown.com",
+              customerName: session.customer_details?.name ?? undefined,
+              shippingAddress: session.customer_details?.address as object | undefined,
+              status: "PAID",
+              stripeCheckoutSessionId: session.id,
+              stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
+            },
+            update: { status: "PAID" },
+          });
+          await logActivity({ userId, action: "store_order_paid", entityType: "store", entityId: storeId, metadata: { amount: session.amount_total } });
+        }
+        break;
+      }
+
       if (userId && session.subscription) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
         const plan = planFromPriceId(subscription.items.data[0]?.price.id) ?? "STARTER";
