@@ -5,7 +5,7 @@ import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createStoreCheckoutSession } from "@/features/storefront/server/actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getReadableTextColor } from "@/lib/utils";
 
 export function BuyBox({
   storeId,
@@ -50,7 +50,7 @@ export function BuyBox({
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <Button onClick={handleBuy} disabled={loading} style={{ backgroundColor: accentColor }} className="text-white">
+            <Button onClick={handleBuy} disabled={loading} style={{ backgroundColor: accentColor, color: getReadableTextColor(accentColor) }}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
               Buy now
             </Button>
