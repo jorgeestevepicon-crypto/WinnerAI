@@ -1,10 +1,12 @@
 import Image from "next/image";
 import type { StoreSectionData, StoreTheme } from "@/features/stores/schemas";
 import { Badge } from "@/components/ui/badge";
+import { getReadableTextColor } from "@/lib/utils";
 
 export function SectionRenderer({ section, theme }: { section: StoreSectionData; theme: StoreTheme }) {
   const headingStyle = { fontFamily: theme.headingFont, color: theme.primaryColor };
-  const buttonStyle = { backgroundColor: theme.accentColor };
+  const buttonStyle = { backgroundColor: theme.accentColor, color: getReadableTextColor(theme.accentColor) };
+  const primaryTextColor = getReadableTextColor(theme.primaryColor);
 
   switch (section.type) {
     case "hero":
@@ -26,7 +28,7 @@ export function SectionRenderer({ section, theme }: { section: StoreSectionData;
             <p className={`mx-auto mt-3 max-w-xl ${section.settings.imageUrl ? "text-white/90" : "text-muted-foreground"}`}>
               {section.settings.subtitle}
             </p>
-            <button className="mt-6 rounded-full px-6 py-2 text-sm font-medium text-white" style={buttonStyle}>
+            <button className="mt-6 rounded-full px-6 py-2 text-sm font-medium" style={buttonStyle}>
               {section.settings.ctaLabel}
             </button>
           </div>
@@ -69,7 +71,7 @@ export function SectionRenderer({ section, theme }: { section: StoreSectionData;
                   <li key={i}>{b}</li>
                 ))}
               </ul>
-              <button className="mt-4 rounded-full px-6 py-2 text-sm font-medium text-white" style={buttonStyle}>
+              <button className="mt-4 rounded-full px-6 py-2 text-sm font-medium" style={buttonStyle}>
                 {section.settings.ctaLabel}
               </button>
             </div>
@@ -116,8 +118,10 @@ export function SectionRenderer({ section, theme }: { section: StoreSectionData;
     case "cta":
       return (
         <section className="px-8 py-16 text-center" style={{ backgroundColor: theme.primaryColor }}>
-          <h2 className="text-2xl font-bold text-white">{section.settings.headline}</h2>
-          <button className="mt-4 rounded-full px-6 py-2 text-sm font-medium text-white" style={buttonStyle}>
+          <h2 className="text-2xl font-bold" style={{ color: primaryTextColor }}>
+            {section.settings.headline}
+          </h2>
+          <button className="mt-4 rounded-full px-6 py-2 text-sm font-medium" style={buttonStyle}>
             {section.settings.ctaLabel}
           </button>
         </section>

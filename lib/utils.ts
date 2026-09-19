@@ -52,3 +52,21 @@ export function slugify(input: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 }
+
+/**
+ * Picks black or white text so it stays readable against an arbitrary
+ * background color — needed because the AI picks theme colors freely and
+ * can produce light accent/primary colors that would make hardcoded white
+ * text invisible.
+ */
+export function getReadableTextColor(hexColor: string): "#000000" | "#ffffff" {
+  const hex = hexColor.replace("#", "");
+  if (hex.length !== 3 && hex.length !== 6) return "#ffffff";
+  const full = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return "#ffffff";
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 165 ? "#000000" : "#ffffff";
+}
