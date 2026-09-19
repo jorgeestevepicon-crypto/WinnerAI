@@ -10,6 +10,7 @@ import { Megaphone } from "lucide-react";
 import { GenerateCreativeForm } from "@/features/ads/components/generate-creative-form";
 import { CreativeCard } from "@/features/ads/components/creative-card";
 import { VideoConceptPanel } from "@/features/ads/components/video-concept-panel";
+import { integrations } from "@/config/env";
 
 export const metadata = { title: "Campaign" };
 
@@ -45,7 +46,13 @@ export default async function CampaignPage({ params }: { params: { id: string } 
       ) : (
         <div className="space-y-4">
           {campaign.creatives.map((creative) => (
-            <CreativeCard key={creative.id} creative={creative} platform={campaign.platform} brandName={brandName} />
+            <CreativeCard
+              key={creative.id}
+              creative={creative}
+              platform={campaign.platform}
+              brandName={brandName}
+              videoConfigured={integrations.videoConfigured}
+            />
           ))}
         </div>
       )}

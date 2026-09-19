@@ -46,6 +46,11 @@ export const env = {
     },
   },
 
+  video: {
+    provider: (process.env.AI_VIDEO_PROVIDER || "none") as "none" | "runway",
+    apiKey: process.env.AI_VIDEO_API_KEY,
+  },
+
   storage: {
     provider: (process.env.STORAGE_PROVIDER || "local") as "local" | "s3",
     endpoint: process.env.STORAGE_ENDPOINT,
@@ -69,6 +74,9 @@ export const integrations = {
   },
   get stripeConfigured() {
     return !!env.stripe.secretKey;
+  },
+  get videoConfigured() {
+    return env.video.provider !== "none" && !!env.video.apiKey;
   },
   get s3StorageConfigured() {
     return (

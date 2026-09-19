@@ -9,6 +9,8 @@ import { runAIJob } from "@/lib/ai/job-runner";
 import { generateAdCopy } from "@/lib/ai/services/ad-copy";
 import { generateVideoConcept } from "@/lib/ai/services/video-concept";
 import { getAIImageProvider } from "@/lib/ai/image-provider";
+import { getAIVideoProvider } from "@/lib/ai/video-provider";
+import { integrations } from "@/config/env";
 import { newCampaignSchema, generateAdsInputSchema, AD_FORMATS } from "@/features/ads/schemas";
 
 export async function createCampaign(input: unknown) {
@@ -123,6 +125,75 @@ export async function generateVariantImage(variantId: string) {
     return { success: true as const, url: image.url };
   } catch {
     return { success: false as const, error: "Image generation failed" };
+  }
+}
+
+const PORTRAIT_FORMATS = new Set(["instagram_story", "instagram_reel", "tiktok"]);
+const SQUARE_FORMATS = new Set(["instagram_feed"]);
+
+function orientationForFormat(format: string): "portrait" | "landscape" | "square" {
+  if (PORTRAIT_FORMATS.has(format)) return "portrait";
+  if (SQUARE_FORMATS.has(format)) return "square";
+  return "landscape";
+}
+
+export async function generateVariantVideo(variantId: string) {
+  const user = await requireUser();
+  const variant = await prisma.adVariant.findUnique({
+    where: { id: variantId },
+    include: { creative: { include: { campaign: true } } },
+  });
+  if (!variant || variant.creative.campaign.userId !== user.id) return { success: false as const, error: "Not found" };
+
+  const provider = getAIVideoProvider();
+  if (!provider || !integrations.videoConfigured) {
+    return { success: false as const, error: "Video generation isn't configured in this environment. Set AI_VIDEO_PROVIDER and AI_VIDEO_API_KEY." };
+  }
+
+  try {
+    const { taskId } = await provider.startVideo({
+      prompt: variant.imagePrompt ?? `Short advertisement video for the product, ${variant.creative.style} style. ${variant.hook ?? ""}`,
+      imageUrl: variant.imageUrl ?? undefined,
+      durationSeconds: 8,
+      orientation: orientationForFormat(variant.creative.format),
+    });
+
+    await prisma.adVariant.update({
+      where: { id: variantId },
+      data: { videoTaskId: taskId, videoStatus: "PROCESSING", videoUrl: null, videoError: null },
+    });
+    revalidatePath(`/ads/${variant.creative.campaignId}`);
+    return { success: true as const, taskId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Video generation failed to start";
+    await prisma.adVariant.update({ where: { id: variantId }, data: { videoStatus: "FAILED", videoError: message } });
+    return { success: false as const, error: message };
+  }
+}
+
+export async function checkVariantVideoStatus(variantId: string) {
+  const user = await requireUser();
+  const variant = await prisma.adVariant.findUnique({
+    where: { id: variantId },
+    include: { creative: { include: { campaign: true } } },
+  });
+  if (!variant || variant.creative.campaign.userId !== user.id) return { success: false as const, error: "Not found" };
+  if (!variant.videoTaskId) return { success: false as const, error: "No video generation in progress" };
+
+  const provider = getAIVideoProvider();
+  if (!provider) return { success: false as const, error: "Video generation isn't configured in this environment." };
+
+  try {
+    const result = await provider.checkVideo(variant.videoTaskId);
+    await prisma.adVariant.update({
+      where: { id: variantId },
+      data: { videoStatus: result.status, videoUrl: result.videoUrl ?? null, videoError: result.error ?? null },
+    });
+    if (result.status === "COMPLETED") revalidatePath(`/ads/${variant.creative.campaignId}`);
+    return { success: true as const, status: result.status, videoUrl: result.videoUrl, error: result.error };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Status check failed";
+    return { success: false as const, error: message };
   }
 }
 

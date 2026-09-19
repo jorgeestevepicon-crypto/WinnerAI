@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Copy, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { Heart, Copy, Trash2, ImageIcon, Loader2, Video, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import type { AdCreative, AdVariant } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,95 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { AdPreview } from "@/features/ads/components/ad-preview";
-import { generateVariantImage, toggleFavoriteCreative, duplicateCreative, deleteCreative } from "@/features/ads/server/actions";
+import {
+  generateVariantImage,
+  generateVariantVideo,
+  checkVariantVideoStatus,
+  toggleFavoriteCreative,
+  duplicateCreative,
+  deleteCreative,
+} from "@/features/ads/server/actions";
+
+const POLL_INTERVAL_MS = 5000;
+
+function VideoControl({ variant, disabled }: { variant: AdVariant; disabled: boolean }) {
+  const router = useRouter();
+  const [status, setStatus] = useState(variant.videoStatus);
+  const [videoUrl, setVideoUrl] = useState(variant.videoUrl);
+  const [starting, setStarting] = useState(false);
+
+  useEffect(() => {
+    if (status !== "PROCESSING") return;
+    const interval = setInterval(async () => {
+      const result = await checkVariantVideoStatus(variant.id);
+      if (!result.success) return;
+      setStatus(result.status);
+      if (result.status === "COMPLETED") {
+        setVideoUrl(result.videoUrl ?? null);
+        router.refresh();
+      }
+      if (result.status === "FAILED") {
+        toast.error(result.error ?? "Video generation failed");
+      }
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [status, variant.id, router]);
+
+  async function handleGenerate() {
+    setStarting(true);
+    const result = await generateVariantVideo(variant.id);
+    setStarting(false);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    setStatus("PROCESSING");
+    setVideoUrl(null);
+  }
+
+  if (disabled) {
+    return <p className="text-xs text-muted-foreground">Video generation isn&apos;t configured yet.</p>;
+  }
+
+  if (status === "PROCESSING") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating video… (can take a few minutes)
+      </div>
+    );
+  }
+
+  if (videoUrl) {
+    return (
+      <div className="space-y-1.5">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video src={videoUrl} controls className="w-full rounded-md" />
+        <Button variant="outline" size="sm" onClick={handleGenerate} disabled={starting}>
+          {starting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+          Regenerate video
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleGenerate} disabled={starting}>
+      {starting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Video className="h-3.5 w-3.5" />}
+      Generate video
+    </Button>
+  );
+}
 
 export function CreativeCard({
   creative,
   platform,
   brandName,
+  videoConfigured,
 }: {
   creative: AdCreative & { variants: AdVariant[] };
   platform: string;
   brandName: string;
+  videoConfigured: boolean;
 }) {
   const router = useRouter();
   const [favorite, setFavorite] = useState(creative.favorite);
@@ -97,6 +176,7 @@ export function CreativeCard({
                   {variant.imageUrl ? "Regenerate image" : "Generate image"}
                 </Button>
               </div>
+              <VideoControl variant={variant} disabled={!videoConfigured} />
             </div>
           ))}
         </div>

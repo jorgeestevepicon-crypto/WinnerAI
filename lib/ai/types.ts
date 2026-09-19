@@ -63,3 +63,24 @@ export interface AIImageProvider {
   id: "demo" | "openai";
   generateImage(params: AIImageParams): Promise<AIImageResult>;
 }
+
+export interface AIVideoStartParams {
+  /** What the clip should show. */
+  prompt: string;
+  /** Optional seed image (e.g. the ad variant's generated image) to animate. */
+  imageUrl?: string;
+  /** Clip length in seconds. Providers may round to their supported durations. */
+  durationSeconds: number;
+  /** "portrait" for TikTok/Reels/Stories, "landscape" for feed/YouTube. */
+  orientation: "portrait" | "landscape" | "square";
+}
+
+export type AIVideoStatus = "PROCESSING" | "COMPLETED" | "FAILED";
+
+export interface AIVideoProvider {
+  id: "runway";
+  /** Kicks off an async generation job and returns immediately with its id. */
+  startVideo(params: AIVideoStartParams): Promise<{ taskId: string }>;
+  /** Polls a previously started job. */
+  checkVideo(taskId: string): Promise<{ status: AIVideoStatus; videoUrl?: string; error?: string }>;
+}

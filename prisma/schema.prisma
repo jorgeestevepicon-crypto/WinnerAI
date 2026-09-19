@@ -481,6 +481,11 @@ model AdVariant {
   imageUrl    String?
   imagePrompt String? @db.Text
 
+  videoUrl    String?
+  videoTaskId String?
+  videoStatus String? // PROCESSING | COMPLETED | FAILED
+  videoError  String? @db.Text
+
   metrics Json? // CTR/CPC/etc when real campaign data exists
 
   createdAt DateTime @default(now())
