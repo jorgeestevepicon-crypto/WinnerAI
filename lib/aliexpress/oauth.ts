@@ -40,13 +40,20 @@ interface TokenResponse {
   expires_in?: number;
 }
 
-async function callAuthMethod(method: string, extraParams: Record<string, string>): Promise<TokenResponse> {
+// AliExpress's system-level auth endpoints are namespaced REST paths (the
+// path segment itself is the method, e.g. POST /rest/auth/token/create),
+// unlike business methods which pass `method=aliexpress.xxx.yyy` as a query
+// param to a single generic gateway path. Passing "auth/token/create" as a
+// `method` query param (the first attempt here) got "InvalidApiPath" back —
+// this puts it in the URL path instead, which real OAuth libraries for this
+// platform document as the correct shape. `method` is not part of the
+// signed params for this call, since it's not a query param here.
+async function callAuthMethod(methodPath: string, extraParams: Record<string, string>): Promise<TokenResponse> {
   const appKey = env.aliexpress.appKey!;
   const appSecret = env.aliexpress.appSecret!;
 
   const params: Record<string, string> = {
     app_key: appKey,
-    method,
     timestamp: timestampMillis(),
     sign_method: "md5",
     format: "json",
@@ -55,17 +62,17 @@ async function callAuthMethod(method: string, extraParams: Record<string, string
   };
   params.sign = signParams(params, appSecret);
 
-  const url = new URL(API_BASE.replace("/sync", "/rest"));
+  const url = new URL(`${API_BASE.replace("/sync", "/rest")}/${methodPath}`);
   Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
   const response = await fetch(url.toString(), { method: "POST" });
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(`AliExpress ${method} failed (${response.status}): ${text}`);
+    throw new Error(`AliExpress ${methodPath} failed (${response.status}): ${text}`);
   }
 
   const data = (await response.json()) as Record<string, unknown>;
   if (typeof data.access_token !== "string") {
-    throw new Error(`AliExpress ${method} did not return an access_token: ${JSON.stringify(data)}`);
+    throw new Error(`AliExpress ${methodPath} did not return an access_token: ${JSON.stringify(data)}`);
   }
   return data as unknown as TokenResponse;
 }
