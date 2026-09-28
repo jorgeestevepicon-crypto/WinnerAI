@@ -51,6 +51,21 @@ const demoImageProvider: AIImageProvider = {
   },
 };
 
+/**
+ * OpenAI retired `dall-e-3` from the images API at some point after this
+ * was first written (it started returning "model does not exist" in
+ * production). `gpt-image-1` is its current successor at the time of this
+ * fix — but OpenAI has been known to require the account's organization to
+ * complete ID verification (platform.openai.com → Settings → Organization
+ * → Verifications) before an API key can use it, so a 403 mentioning
+ * verification here is an account setting, not a bug. Unlike dall-e-3,
+ * gpt-image-1 doesn't support `response_format` and always returns base64
+ * image data (`b64_json`) rather than a hosted URL, which this code turns
+ * into a data: URI — `persistRemoteAsset` uploads that to our own bucket
+ * just like it would a hosted link. If OpenAI's image API has moved on
+ * again by the time you read this, check https://platform.openai.com/docs
+ * and adjust the model name / response parsing below.
+ */
 const openAIImageProvider: AIImageProvider = {
   id: "openai",
   async generateImage(params: AIImageParams): Promise<AIImageResult> {
@@ -58,7 +73,7 @@ const openAIImageProvider: AIImageProvider = {
       throw new AIProviderError("OpenAI image generation is not configured (AI_IMAGE_API_KEY is missing).", "openai");
     }
 
-    const size = params.width === params.height ? "1024x1024" : params.width > params.height ? "1792x1024" : "1024x1792";
+    const size = params.width === params.height ? "1024x1024" : params.width > params.height ? "1536x1024" : "1024x1536";
 
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
@@ -66,7 +81,7 @@ const openAIImageProvider: AIImageProvider = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${env.ai.imageApiKey}`,
       },
-      body: JSON.stringify({ model: "dall-e-3", prompt: params.prompt, size, n: 1 }),
+      body: JSON.stringify({ model: "gpt-image-1", prompt: params.prompt, size, n: 1 }),
     });
 
     if (!response.ok) {
@@ -75,12 +90,14 @@ const openAIImageProvider: AIImageProvider = {
     }
 
     const data = await response.json();
-    const url = data.data?.[0]?.url;
-    if (typeof url !== "string") {
-      throw new AIProviderError("OpenAI image response did not include a URL.", "openai");
+    const first = data.data?.[0];
+    if (typeof first?.url === "string") {
+      return { url: first.url, provider: "openai" };
     }
-
-    return { url, provider: "openai" };
+    if (typeof first?.b64_json === "string") {
+      return { url: `data:image/png;base64,${first.b64_json}`, provider: "openai" };
+    }
+    throw new AIProviderError("OpenAI image response did not include image data.", "openai");
   },
 };
 

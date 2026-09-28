@@ -49,7 +49,6 @@ function publicUrlFor(key: string): string {
  */
 export async function persistRemoteAsset(sourceUrl: string, folder: string): Promise<string> {
   if (!integrations.s3StorageConfigured) return sourceUrl;
-  if (!sourceUrl.startsWith("http")) return sourceUrl;
   if (sourceUrl.startsWith(env.storage.publicUrl!)) return sourceUrl;
 
   try {
