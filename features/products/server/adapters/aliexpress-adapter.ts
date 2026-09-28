@@ -126,6 +126,7 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       pageSize: String(Math.min(params.limit ?? 20, 50)),
       pageIndex: "1",
       targetCurrency: "USD",
+      currency: "USD",
       targetLanguage: "EN",
       countryCode: params.country?.trim() || "US",
     };
