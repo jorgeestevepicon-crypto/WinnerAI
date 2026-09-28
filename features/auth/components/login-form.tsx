@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
@@ -13,10 +13,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  OAuthAccountNotLinked: "That email is already registered. Sign in with your password once, then Google will work too.",
+  AccessDenied: "Access denied by the provider.",
+  Configuration: "Sign-in isn't configured correctly. Please try again later.",
+};
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (!error) return;
+    toast.error(OAUTH_ERROR_MESSAGES[error] ?? "Sign-in failed. Please try again.");
+  }, [searchParams]);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),

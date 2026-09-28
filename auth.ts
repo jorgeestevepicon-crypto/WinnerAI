@@ -21,7 +21,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
     ...(env.auth.googleId && env.auth.googleSecret
-      ? [Google({ clientId: env.auth.googleId, clientSecret: env.auth.googleSecret })]
+      ? [
+          Google({
+            clientId: env.auth.googleId,
+            clientSecret: env.auth.googleSecret,
+            // Google verifies account ownership of the email itself, so it's
+            // safe to link a Google sign-in to an existing email/password
+            // account with the same address instead of silently refusing
+            // (Auth.js's default) — otherwise a user who registered with
+            // email/password first can never use "Continue with Google" on
+            // that same address.
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
       : []),
     Credentials({
       name: "credentials",
