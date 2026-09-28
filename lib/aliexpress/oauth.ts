@@ -1,6 +1,6 @@
 import "server-only";
 import { env } from "@/config/env";
-import { API_BASE, signParams, timestampMillis } from "@/lib/aliexpress/sign";
+import { API_BASE, signParamsWithPath, timestampMillis } from "@/lib/aliexpress/sign";
 
 /**
  * AliExpress Open Platform OAuth2 flow for the Dropshipping API (distinct
@@ -44,10 +44,10 @@ interface TokenResponse {
 // path segment itself is the method, e.g. POST /rest/auth/token/create),
 // unlike business methods which pass `method=aliexpress.xxx.yyy` as a query
 // param to a single generic gateway path. Passing "auth/token/create" as a
-// `method` query param (the first attempt here) got "InvalidApiPath" back —
-// this puts it in the URL path instead, which real OAuth libraries for this
-// platform document as the correct shape. `method` is not part of the
-// signed params for this call, since it's not a query param here.
+// `method` query param (the first attempt here) got "InvalidApiPath" back;
+// putting it in the URL path fixed that but then got "IncompleteSignature",
+// since this path style folds the API path itself into the signed string
+// (see signParamsWithPath) rather than just the query params.
 async function callAuthMethod(methodPath: string, extraParams: Record<string, string>): Promise<TokenResponse> {
   const appKey = env.aliexpress.appKey!;
   const appSecret = env.aliexpress.appSecret!;
@@ -60,7 +60,7 @@ async function callAuthMethod(methodPath: string, extraParams: Record<string, st
     v: "2.0",
     ...extraParams,
   };
-  params.sign = signParams(params, appSecret);
+  params.sign = signParamsWithPath(`/${methodPath}`, params, appSecret);
 
   const url = new URL(`${API_BASE.replace("/sync", "/rest")}/${methodPath}`);
   Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));

@@ -29,6 +29,19 @@ export function signParams(params: Record<string, string>, secret: string): stri
   return createHash("md5").update(`${secret}${base}${secret}`, "utf8").digest("hex").toUpperCase();
 }
 
+/**
+ * Signing variant for AliExpress's namespaced REST paths (auth/token/create
+ * etc.), which — unlike the generic /sync or /rest gateway business methods
+ * use — fold the API path itself into the signed string (the Alibaba Cloud
+ * API Gateway convention: secret + path + sortedParams + secret), not just
+ * the query params. Got "IncompleteSignature" without the path included.
+ */
+export function signParamsWithPath(apiPath: string, params: Record<string, string>, secret: string): string {
+  const sortedKeys = Object.keys(params).sort();
+  const base = sortedKeys.map((key) => `${key}${params[key]}`).join("");
+  return createHash("md5").update(`${secret}${apiPath}${base}${secret}`, "utf8").digest("hex").toUpperCase();
+}
+
 export async function callAliExpress(params: Record<string, string>): Promise<unknown> {
   const url = new URL(API_BASE);
   Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
