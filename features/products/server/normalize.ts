@@ -16,7 +16,7 @@ export function toProductCreateInput(
   input: NormalizedProductInput,
   sourceId: ProductSourceId
 ): Prisma.ProductUncheckedCreateInput {
-  const { score, breakdown } = computeWinningScore(input.signals, input.cost, input.price);
+  const { score, breakdown, partial } = computeWinningScore(input.signals, input.cost, input.price);
 
   return {
     title: input.title,
@@ -31,14 +31,14 @@ export function toProductCreateInput(
     currency: input.currency,
     shippingCost: input.shippingCost ?? 0,
     estimatedMargin: Math.round(((input.price - input.cost) / input.price) * 1000) / 10,
-    demandScore: breakdown.demand,
-    trendScore: breakdown.trend,
-    competitionScore: breakdown.competition,
-    saturationScore: breakdown.saturation,
-    engagementScore: breakdown.engagement,
-    growthScore: breakdown.growth,
+    demandScore: breakdown.demand ?? null,
+    trendScore: breakdown.trend ?? null,
+    competitionScore: breakdown.competition ?? null,
+    saturationScore: breakdown.saturation ?? null,
+    engagementScore: breakdown.engagement ?? null,
+    growthScore: breakdown.growth ?? null,
     winningScore: score,
     country: input.country,
-    metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+    metadata: { ...(input.metadata ?? {}), partialSignals: partial } as Prisma.InputJsonValue,
   };
 }

@@ -4,6 +4,7 @@ import { productFilterSchema } from "@/features/products/schemas";
 import { ProductFilters } from "@/features/products/components/product-filters";
 import { ProductResults } from "@/features/products/components/product-results";
 import { DiscoverButton } from "@/features/products/components/discover-button";
+import { productSourceAdapters } from "@/features/products/server/adapters";
 
 export const metadata = { title: "Product Finder" };
 
@@ -30,7 +31,14 @@ export default async function ProductsPage({
           <h1 className="text-2xl font-semibold tracking-tight">Product Finder</h1>
           <p className="text-sm text-muted-foreground">Discover and score potentially winning products.</p>
         </div>
-        <DiscoverButton />
+        <DiscoverButton
+          sources={productSourceAdapters.map((a) => ({
+            id: a.id,
+            label: a.label,
+            configured: a.configured,
+            disabledReason: a.disabledReason,
+          }))}
+        />
       </div>
 
       <ProductFilters categories={categories} countries={countries} />

@@ -1,8 +1,10 @@
+import { integrations } from "@/config/env";
 import type { ProductSourceAdapter, ProductSourceId } from "@/features/products/types";
+import { aliexpressProductSourceAdapter } from "@/features/products/server/adapters/aliexpress-adapter";
 
 // These adapters implement the same ProductSourceAdapter contract as the
 // demo catalog so the Product Finder never has to special-case a source.
-// None of them are wired to a real API yet because that would require
+// Most of them aren't wired to a real API yet because that would require
 // credentials this deployment doesn't have (and, for several of these
 // platforms, official partner/API access that has to be requested).
 // Once credentials exist, replace `search()` with a real implementation
@@ -21,11 +23,13 @@ function disabledAdapter(id: ProductSourceId, label: string, disabledReason: str
 }
 
 export const externalProductSourceAdapters: ProductSourceAdapter[] = [
-  disabledAdapter(
-    "aliexpress",
-    "AliExpress",
-    "Requires an AliExpress Open Platform (affiliate/dropshipping) API key. Not configured in this environment."
-  ),
+  integrations.aliexpressConfigured
+    ? aliexpressProductSourceAdapter
+    : disabledAdapter(
+        "aliexpress",
+        "AliExpress",
+        "Requires an AliExpress Open Platform (affiliate) API key, secret and tracking ID. Not configured in this environment."
+      ),
   disabledAdapter(
     "amazon",
     "Amazon",

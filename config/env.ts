@@ -60,6 +60,12 @@ export const env = {
     secretKey: process.env.STORAGE_SECRET_KEY,
     publicUrl: process.env.STORAGE_PUBLIC_URL,
   },
+
+  aliexpress: {
+    appKey: process.env.ALIEXPRESS_APP_KEY,
+    appSecret: process.env.ALIEXPRESS_APP_SECRET,
+    trackingId: process.env.ALIEXPRESS_TRACKING_ID,
+  },
 } as const;
 
 export const integrations = {
@@ -90,5 +96,8 @@ export const integrations = {
       !!env.storage.secretKey &&
       !!env.storage.publicUrl
     );
+  },
+  get aliexpressConfigured() {
+    return !!env.aliexpress.appKey && !!env.aliexpress.appSecret && !!env.aliexpress.trackingId;
   },
 };

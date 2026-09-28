@@ -1,16 +1,16 @@
 export interface RawProductSignals {
   /** 0-100, how much search/purchase interest exists for this product. */
-  demand: number;
+  demand?: number;
   /** 0-100, how strongly interest is trending upward. */
-  trend: number;
+  trend?: number;
   /** 0-100, how much ad/marketplace competition exists (higher = more competition). */
-  competition: number;
+  competition?: number;
   /** 0-100, how saturated the market already is (higher = more saturated). */
-  saturation: number;
+  saturation?: number;
   /** 0-100, social engagement (likes/comments/shares) around the product. */
-  engagement: number;
+  engagement?: number;
   /** 0-100, month-over-month growth of interest. */
-  growth: number;
+  growth?: number;
 }
 
 export interface NormalizedProductInput {

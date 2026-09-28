@@ -26,11 +26,18 @@ export async function runProductDiscovery(input: unknown) {
     };
   }
 
-  const results = await adapter.search({
-    query: parsed.data.query,
-    category: parsed.data.category,
-    limit: parsed.data.limit,
-  });
+  let results;
+  try {
+    results = await adapter.search({
+      query: parsed.data.query,
+      category: parsed.data.category,
+      limit: parsed.data.limit,
+    });
+  } catch (error) {
+    console.error(`${adapter.label} product search failed`, error);
+    const message = error instanceof Error ? error.message : "Search failed";
+    return { success: false as const, error: `${adapter.label}: ${message}` };
+  }
 
   if (results.length === 0) {
     return { success: true as const, count: 0 };
