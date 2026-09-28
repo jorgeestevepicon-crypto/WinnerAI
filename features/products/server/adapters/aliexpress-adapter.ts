@@ -131,7 +131,18 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
     systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
 
     const data = await callAliExpress(systemParams);
+    const errorResponse = (data as Record<string, unknown>)?.error_response;
+    if (errorResponse) {
+      throw new Error(`AliExpress ${METHOD} returned an error: ${JSON.stringify(errorResponse)}`);
+    }
+
     const products = extractProducts(data);
+    if (products.length === 0) {
+      // The exact response envelope for this method hasn't been confirmed
+      // against a live account yet — log the raw shape so it can be fixed
+      // once we see it, instead of silently returning "no results" forever.
+      console.error(`${METHOD} returned no products via known response paths. Raw response:`, JSON.stringify(data).slice(0, 4000));
+    }
 
     return products
       .map((product): NormalizedProductInput | null => {
