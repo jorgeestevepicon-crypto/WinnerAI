@@ -28,7 +28,7 @@ export const externalProductSourceAdapters: ProductSourceAdapter[] = [
     : disabledAdapter(
         "aliexpress",
         "AliExpress",
-        "Requires an AliExpress Open Platform (affiliate) API key, secret and tracking ID. Not configured in this environment."
+        "Requires an AliExpress Open Platform app key and secret. Not configured in this environment."
       ),
   disabledAdapter(
     "amazon",

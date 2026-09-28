@@ -64,7 +64,6 @@ export const env = {
   aliexpress: {
     appKey: process.env.ALIEXPRESS_APP_KEY,
     appSecret: process.env.ALIEXPRESS_APP_SECRET,
-    trackingId: process.env.ALIEXPRESS_TRACKING_ID,
   },
 } as const;
 
@@ -98,6 +97,6 @@ export const integrations = {
     );
   },
   get aliexpressConfigured() {
-    return !!env.aliexpress.appKey && !!env.aliexpress.appSecret && !!env.aliexpress.trackingId;
+    return !!env.aliexpress.appKey && !!env.aliexpress.appSecret;
   },
 };

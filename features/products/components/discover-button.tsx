@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { runProductDiscovery } from "@/features/products/server/actions";
+import { getAliExpressAuthUrl } from "@/features/aliexpress/server/actions";
 
 export interface DiscoverableSource {
   id: string;
@@ -18,16 +19,18 @@ export interface DiscoverableSource {
   disabledReason?: string;
 }
 
-export function DiscoverButton({ sources }: { sources: DiscoverableSource[] }) {
+export function DiscoverButton({ sources, aliexpressConnected }: { sources: DiscoverableSource[]; aliexpressConnected: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [open, setOpen] = useState(false);
   const [sourceId, setSourceId] = useState(sources.find((s) => s.id === "demo")?.id ?? sources[0]?.id ?? "demo");
   const [query, setQuery] = useState("");
 
   const selectedSource = sources.find((s) => s.id === sourceId);
   const needsQuery = sourceId !== "demo";
+  const needsAliExpressConnection = sourceId === "aliexpress" && selectedSource?.configured && !aliexpressConnected;
 
   async function handleSubmit() {
     setLoading(true);
@@ -45,6 +48,18 @@ export function DiscoverButton({ sources }: { sources: DiscoverableSource[] }) {
     toast.success(`Found ${result.count} products`);
     setOpen(false);
     startTransition(() => router.refresh());
+  }
+
+  async function handleConnectAliExpress() {
+    setConnecting(true);
+    const result = await getAliExpressAuthUrl();
+    setConnecting(false);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    window.location.href = result.url;
   }
 
   const busy = loading || pending;
@@ -80,6 +95,9 @@ export function DiscoverButton({ sources }: { sources: DiscoverableSource[] }) {
             {selectedSource && !selectedSource.configured && (
               <p className="text-xs text-muted-foreground">{selectedSource.disabledReason}</p>
             )}
+            {needsAliExpressConnection && (
+              <p className="text-xs text-muted-foreground">Connect your AliExpress account to search this source.</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Search keywords {!needsQuery && "(optional)"}</Label>
@@ -91,10 +109,17 @@ export function DiscoverButton({ sources }: { sources: DiscoverableSource[] }) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={busy || (needsQuery && !query.trim()) || !selectedSource?.configured}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Search
-          </Button>
+          {needsAliExpressConnection ? (
+            <Button onClick={handleConnectAliExpress} disabled={connecting}>
+              {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              Connect AliExpress
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={busy || (needsQuery && !query.trim()) || !selectedSource?.configured}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Search
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

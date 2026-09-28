@@ -32,6 +32,7 @@ export async function runProductDiscovery(input: unknown) {
       query: parsed.data.query,
       category: parsed.data.category,
       limit: parsed.data.limit,
+      userId: user.id,
     });
   } catch (error) {
     console.error(`${adapter.label} product search failed`, error);

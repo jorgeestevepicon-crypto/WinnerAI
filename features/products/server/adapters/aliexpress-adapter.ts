@@ -1,43 +1,30 @@
 import "server-only";
-import { createHash } from "crypto";
 import { env } from "@/config/env";
+import { signParams, timestampGMT8, callAliExpress } from "@/lib/aliexpress/sign";
+import { getValidAccessToken } from "@/lib/aliexpress/connection";
 import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter } from "@/features/products/types";
 
 /**
- * AliExpress Affiliate API (part of the AliExpress Open Platform).
+ * AliExpress Dropshipping API (`aliexpress.ds.*`), via the AliExpress Open
+ * Platform. This account only has "Drop Shipping" API access (not the
+ * Affiliate API), so unlike a simple app-level key, every call here acts on
+ * behalf of a specific user's OAuth-authorized AliExpress account — see
+ * lib/aliexpress/oauth.ts and lib/aliexpress/connection.ts for that flow.
  *
  * This has not been exercised against a live AliExpress Open Platform
- * account in this environment — the endpoint, parameter names, response
- * shape and signing scheme below match their classic TOP-style affiliate
- * API as documented at https://openservice.aliexpress.com, but that API
- * (like every marketplace partner API) can change. Verify against current
- * docs before relying on this in production, especially: the response
- * envelope shape, whether `sign_method` still defaults to plain MD5 wrap-
- * signing vs HMAC, and the exact field names under `product_query_response`.
- *
- * Also note a structural limit, not a bug: AliExpress's affiliate API gives
- * real product data (title, images, price, recent order volume) but no
- * trend/competition/saturation/engagement/growth signals — those simply
- * don't exist in their data. `demand` is derived from real recent order
- * volume; the other five Winning Score signals are left undefined rather
- * than invented (see scoring.ts's partial-signal handling).
+ * account in this environment. `aliexpress.ds.text.search` is this account's
+ * best-known product-search method for the Dropshipping API family, but its
+ * exact parameter names and response envelope are less consistently
+ * documented than the Affiliate API's — verify against the "Documentation"
+ * tab in your Open Platform app console before relying on this, and adjust
+ * the method name / request params / response parsing below if they differ.
+ * Response parsing below tries a couple of plausible envelope shapes and
+ * fails safely (empty results, surfaced error) rather than crashing if none
+ * of them match — check the real response the first time this runs and fix
+ * the path if needed.
  */
 
-const API_BASE = "https://api-sg.aliexpress.com/sync";
-const METHOD = "aliexpress.affiliate.product.query";
-
-function timestampGMT8(): string {
-  const now = new Date();
-  const gmt8 = new Date(now.getTime() + (8 * 60 + now.getTimezoneOffset()) * 60000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${gmt8.getFullYear()}-${pad(gmt8.getMonth() + 1)}-${pad(gmt8.getDate())} ${pad(gmt8.getHours())}:${pad(gmt8.getMinutes())}:${pad(gmt8.getSeconds())}`;
-}
-
-function signParams(params: Record<string, string>, secret: string): string {
-  const sortedKeys = Object.keys(params).sort();
-  const base = sortedKeys.map((key) => `${key}${params[key]}`).join("");
-  return createHash("md5").update(`${secret}${base}${secret}`, "utf8").digest("hex").toUpperCase();
-}
+const METHOD = "aliexpress.ds.text.search";
 
 /**
  * Maps real recent-order-volume onto our 0-100 demand scale via a log
@@ -59,49 +46,71 @@ function parseVolume(raw: unknown): number {
   return 0;
 }
 
-interface AliExpressProduct {
-  product_id: number | string;
-  product_title: string;
-  product_main_image_url?: string;
-  product_small_image_urls?: { string?: string[] };
+interface DsProduct {
+  product_id?: number | string;
+  item_id?: number | string;
+  product_title?: string;
+  subject?: string;
+  product_image?: string;
+  image_url?: string;
   product_detail_url?: string;
-  promotion_link?: string;
-  shop_url?: string;
+  item_url?: string;
   target_sale_price?: string;
-  first_level_category_name?: string;
-  second_level_category_name?: string;
-  lastest_volume?: number | string;
+  sale_price?: string;
+  category_name?: string;
+  trade_volume?: number | string;
+  volume?: number | string;
 }
 
-function extractImages(product: AliExpressProduct): string[] {
-  const images: string[] = [];
-  if (product.product_main_image_url) images.push(product.product_main_image_url);
-  if (Array.isArray(product.product_small_image_urls?.string)) {
-    images.push(...product.product_small_image_urls!.string!);
+/** Digs through a couple of plausible response envelope shapes for the product list, since the exact one hasn't been confirmed against a live response yet. */
+function extractProducts(data: unknown): DsProduct[] {
+  const root = data as Record<string, unknown> & {
+    aliexpress_ds_text_search_response?: {
+      data?: { products?: { selection_search_product?: unknown }; result?: { products?: { product?: unknown } } };
+      result?: { products?: { product?: unknown } };
+    };
+    data?: { products?: unknown };
+  };
+  const candidates = [
+    root?.aliexpress_ds_text_search_response?.data?.products?.selection_search_product,
+    root?.aliexpress_ds_text_search_response?.data?.result?.products?.product,
+    root?.aliexpress_ds_text_search_response?.result?.products?.product,
+    root?.data?.products,
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
   }
-  return images;
+  return [];
 }
 
-async function callAliExpress(params: Record<string, string>): Promise<unknown> {
-  const url = new URL(API_BASE);
-  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    throw new Error(`AliExpress API request failed (${response.status})`);
-  }
-  return response.json();
+function extractTitle(p: DsProduct): string | undefined {
+  return p.product_title || p.subject;
+}
+function extractImage(p: DsProduct): string | undefined {
+  return p.product_image || p.image_url;
+}
+function extractUrl(p: DsProduct): string | undefined {
+  return p.product_detail_url || p.item_url;
+}
+function extractPrice(p: DsProduct): number {
+  return Number(p.target_sale_price ?? p.sale_price ?? 0);
 }
 
 export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
   id: "aliexpress",
   label: "AliExpress",
+  // App-level: the Open Platform app exists. Whether *this* user has
+  // authorized it is checked separately (getAliExpressConnectionStatus) so
+  // the UI can prompt them to connect instead of hiding the source outright.
   configured: true,
   async search(params: ProductSearchParams): Promise<NormalizedProductInput[]> {
-    // AliExpress's category filter uses their own internal numeric taxonomy
-    // (fetched separately via aliexpress.affiliate.category.get), which we
-    // don't have a mapping for from plain category names. Falling back to
-    // searching the category name as a keyword still returns relevant
-    // results via their full-text search.
+    if (!params.userId) return [];
+
+    const accessToken = await getValidAccessToken(params.userId);
+    if (!accessToken) {
+      throw new Error("Your AliExpress account isn't connected yet. Connect it first, then search again.");
+    }
+
     const keywords = params.query?.trim() || params.category?.trim();
     if (!keywords) return [];
 
@@ -112,47 +121,42 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       sign_method: "md5",
       format: "json",
       v: "2.0",
-      keywords,
-      tracking_id: env.aliexpress.trackingId!,
-      page_no: "1",
-      page_size: String(Math.min(params.limit ?? 20, 50)),
-      target_currency: "USD",
-      target_language: "EN",
-      sort: "LAST_VOLUME_DESC",
+      session: accessToken,
+      keyWord: keywords,
+      pageSize: String(Math.min(params.limit ?? 20, 50)),
+      pageIndex: "1",
+      targetCurrency: "USD",
+      targetLanguage: "EN",
     };
     systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
 
-    const data = (await callAliExpress(systemParams)) as {
-      aliexpress_affiliate_product_query_response?: {
-        resp_result?: { result?: { products?: { product?: AliExpressProduct[] } } };
-      };
-    };
-
-    const products = data.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product ?? [];
+    const data = await callAliExpress(systemParams);
+    const products = extractProducts(data);
 
     return products
       .map((product): NormalizedProductInput | null => {
-        const cost = Number(product.target_sale_price ?? 0);
-        if (!cost || Number.isNaN(cost)) return null;
+        const title = extractTitle(product);
+        const cost = extractPrice(product);
+        if (!title || !cost || Number.isNaN(cost)) return null;
 
-        const volume = parseVolume(product.lastest_volume);
+        const volume = parseVolume(product.trade_volume ?? product.volume);
         // Standard 3x dropshipping markup as a starting suggestion the user
         // is expected to adjust in the product editor — not a claim about
         // real-world pricing data.
         const suggestedPrice = Math.floor(cost * 3) + 0.99;
+        const image = extractImage(product);
 
         return {
-          title: product.product_title,
-          images: extractImages(product),
-          category: product.second_level_category_name || product.first_level_category_name || "Uncategorized",
-          sourceUrl: product.promotion_link || product.product_detail_url,
+          title,
+          images: image ? [image] : [],
+          category: product.category_name || "Uncategorized",
+          sourceUrl: extractUrl(product),
           supplierName: "AliExpress Seller",
-          supplierUrl: product.shop_url,
           cost,
           price: suggestedPrice,
           currency: "USD",
           signals: { demand: demandFromVolume(volume) },
-          metadata: { aliexpressProductId: product.product_id, recentOrders: volume },
+          metadata: { aliexpressProductId: product.product_id ?? product.item_id, recentOrders: volume },
         };
       })
       .filter((product): product is NormalizedProductInput => product !== null);

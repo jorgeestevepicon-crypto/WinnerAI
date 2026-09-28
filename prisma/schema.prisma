@@ -60,6 +60,7 @@ model User {
   stores        Store[]
   adCampaigns   AdCampaign[]
   shopifyConnections ShopifyConnection[]
+  aliexpressConnection AliExpressConnection?
   aiJobs        AIJob[]
   aiConversations AIConversation[]
   activityLogs  ActivityLog[]
@@ -394,6 +395,31 @@ model ShopifyConnection {
 
   @@unique([userId, shopDomain])
   @@index([userId])
+}
+
+enum AliExpressConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+}
+
+// AliExpress's Dropshipping API requires an OAuth-authorized account per
+// user (unlike the Affiliate API's simple app-level key), so this mirrors
+// ShopifyConnection's per-user token storage rather than a plain env var.
+model AliExpressConnection {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  accessTokenEncrypted  String?   @db.Text
+  refreshTokenEncrypted String?   @db.Text
+  expiresAt             DateTime?
+  status                AliExpressConnectionStatus @default(DISCONNECTED)
+  lastError             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------------------------

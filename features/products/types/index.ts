@@ -43,6 +43,8 @@ export interface ProductSearchParams {
   category?: string;
   country?: string;
   limit?: number;
+  /** The user running the search — needed by sources that authenticate per-user (e.g. AliExpress's OAuth-connected Dropshipping API), rather than app-wide. */
+  userId?: string;
 }
 
 /**

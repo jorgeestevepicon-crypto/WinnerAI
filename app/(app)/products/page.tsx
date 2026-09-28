@@ -1,3 +1,4 @@
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { searchProducts, getProductCategories, getProductCountries } from "@/features/products/server/queries";
 import { productFilterSchema } from "@/features/products/schemas";
@@ -5,8 +6,16 @@ import { ProductFilters } from "@/features/products/components/product-filters";
 import { ProductResults } from "@/features/products/components/product-results";
 import { DiscoverButton } from "@/features/products/components/discover-button";
 import { productSourceAdapters } from "@/features/products/server/adapters";
+import { getAliExpressConnectionStatus } from "@/features/aliexpress/server/actions";
 
 export const metadata = { title: "Product Finder" };
+
+const ALIEXPRESS_ERROR_MESSAGES: Record<string, string> = {
+  not_configured: "AliExpress isn't configured in this environment.",
+  invalid_request: "The request from AliExpress was missing required parameters.",
+  invalid_state: "This connection attempt expired or could not be verified. Please try again.",
+  connection_failed: "AliExpress connection failed while exchanging the authorization code.",
+};
 
 export default async function ProductsPage({
   searchParams,
@@ -17,11 +26,14 @@ export default async function ProductsPage({
 
   const flat = Object.fromEntries(Object.entries(searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const filters = productFilterSchema.parse(flat);
+  const aliexpressConnected = flat.aliexpress_connected;
+  const aliexpressError = flat.aliexpress_error;
 
-  const [products, categories, countries] = await Promise.all([
+  const [products, categories, countries, isAliExpressConnected] = await Promise.all([
     searchProducts(filters, user.id),
     getProductCategories(user.id),
     getProductCountries(user.id),
+    getAliExpressConnectionStatus(),
   ]);
 
   return (
@@ -38,8 +50,21 @@ export default async function ProductsPage({
             configured: a.configured,
             disabledReason: a.disabledReason,
           }))}
+          aliexpressConnected={isAliExpressConnected}
         />
       </div>
+
+      {aliexpressConnected && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 p-3 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4" /> AliExpress connected successfully.
+        </div>
+      )}
+      {aliexpressError && (
+        <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertTriangle className="h-4 w-4" />
+          {ALIEXPRESS_ERROR_MESSAGES[aliexpressError] ?? "Something went wrong connecting AliExpress."}
+        </div>
+      )}
 
       <ProductFilters categories={categories} countries={countries} />
 

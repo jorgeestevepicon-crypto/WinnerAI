@@ -17,6 +17,8 @@ const actionCopy: Record<ActivityAction, { label: string; icon: typeof History }
   ad_saved: { label: "Saved an ad", icon: Megaphone },
   shopify_connected: { label: "Connected Shopify", icon: ShoppingBag },
   shopify_disconnected: { label: "Disconnected Shopify", icon: ShoppingBag },
+  aliexpress_connected: { label: "Connected AliExpress", icon: ShoppingBag },
+  aliexpress_disconnected: { label: "Disconnected AliExpress", icon: ShoppingBag },
   subscription_updated: { label: "Updated subscription", icon: CreditCard },
 };
 
