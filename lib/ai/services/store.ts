@@ -187,7 +187,8 @@ export async function generateHeroImage(
       label: input.productTitle,
     });
     return await persistRemoteAsset(result.url, "stores");
-  } catch {
+  } catch (error) {
+    console.error("generateHeroImage failed", error);
     return undefined;
   }
 }
@@ -205,7 +206,8 @@ export async function generateProductImage(
       label: input.productTitle,
     });
     return await persistRemoteAsset(result.url, "stores");
-  } catch {
+  } catch (error) {
+    console.error("generateProductImage failed", error);
     return undefined;
   }
 }

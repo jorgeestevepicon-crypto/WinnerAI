@@ -125,7 +125,8 @@ export async function generateVariantImage(variantId: string) {
     await prisma.adVariant.update({ where: { id: variantId }, data: { imageUrl: url } });
     revalidatePath(`/ads/${variant.creative.campaignId}`);
     return { success: true as const, url };
-  } catch {
+  } catch (error) {
+    console.error("generateVariantImage failed", error);
     return { success: false as const, error: "Image generation failed" };
   }
 }

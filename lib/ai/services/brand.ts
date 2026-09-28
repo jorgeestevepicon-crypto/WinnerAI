@@ -73,7 +73,8 @@ export async function generateBrandLogo(
       label: brand.name,
     });
     return await persistRemoteAsset(result.url, "logos");
-  } catch {
+  } catch (error) {
+    console.error("generateBrandLogo failed", error);
     return undefined;
   }
 }
