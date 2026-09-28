@@ -11,6 +11,11 @@ import { createHash } from "crypto";
 
 export const API_BASE = "https://api-sg.aliexpress.com/sync";
 
+/** AliExpress's newer system-level REST auth methods (auth/token/create, auth/token/refresh) expect epoch milliseconds rather than the classic TOP "yyyy-MM-dd HH:mm:ss" string business methods use. */
+export function timestampMillis(): string {
+  return Date.now().toString();
+}
+
 export function timestampGMT8(): string {
   const now = new Date();
   const gmt8 = new Date(now.getTime() + (8 * 60 + now.getTimezoneOffset()) * 60000);

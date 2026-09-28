@@ -1,6 +1,6 @@
 import "server-only";
 import { env } from "@/config/env";
-import { API_BASE, signParams, timestampGMT8 } from "@/lib/aliexpress/sign";
+import { API_BASE, signParams, timestampMillis } from "@/lib/aliexpress/sign";
 
 /**
  * AliExpress Open Platform OAuth2 flow for the Dropshipping API (distinct
@@ -47,7 +47,7 @@ async function callAuthMethod(method: string, extraParams: Record<string, string
   const params: Record<string, string> = {
     app_key: appKey,
     method,
-    timestamp: timestampGMT8(),
+    timestamp: timestampMillis(),
     sign_method: "md5",
     format: "json",
     v: "2.0",
