@@ -75,6 +75,9 @@ export const integrations = {
   get stripeConfigured() {
     return !!env.stripe.secretKey;
   },
+  get googleConfigured() {
+    return !!env.auth.googleId && !!env.auth.googleSecret;
+  },
   get videoConfigured() {
     return env.video.provider !== "none" && !!env.video.apiKey;
   },
