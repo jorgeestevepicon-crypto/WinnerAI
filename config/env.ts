@@ -84,7 +84,8 @@ export const integrations = {
       !!env.storage.endpoint &&
       !!env.storage.bucket &&
       !!env.storage.accessKey &&
-      !!env.storage.secretKey
+      !!env.storage.secretKey &&
+      !!env.storage.publicUrl
     );
   },
 };

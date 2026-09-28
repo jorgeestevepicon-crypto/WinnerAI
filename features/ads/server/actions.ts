@@ -10,6 +10,7 @@ import { generateAdCopy } from "@/lib/ai/services/ad-copy";
 import { generateVideoConcept } from "@/lib/ai/services/video-concept";
 import { getAIImageProvider } from "@/lib/ai/image-provider";
 import { getAIVideoProvider } from "@/lib/ai/video-provider";
+import { persistRemoteAsset } from "@/lib/storage";
 import { integrations } from "@/config/env";
 import { newCampaignSchema, generateAdsInputSchema, AD_FORMATS } from "@/features/ads/schemas";
 
@@ -120,9 +121,10 @@ export async function generateVariantImage(variantId: string) {
       height: format.height,
       label: variant.headline ?? variant.hook ?? "Ad creative",
     });
-    await prisma.adVariant.update({ where: { id: variantId }, data: { imageUrl: image.url } });
+    const url = await persistRemoteAsset(image.url, "ads");
+    await prisma.adVariant.update({ where: { id: variantId }, data: { imageUrl: url } });
     revalidatePath(`/ads/${variant.creative.campaignId}`);
-    return { success: true as const, url: image.url };
+    return { success: true as const, url };
   } catch {
     return { success: false as const, error: "Image generation failed" };
   }
@@ -185,12 +187,13 @@ export async function checkVariantVideoStatus(variantId: string) {
 
   try {
     const result = await provider.checkVideo(variant.videoTaskId);
+    const videoUrl = result.videoUrl ? await persistRemoteAsset(result.videoUrl, "ads/videos") : undefined;
     await prisma.adVariant.update({
       where: { id: variantId },
-      data: { videoStatus: result.status, videoUrl: result.videoUrl ?? null, videoError: result.error ?? null },
+      data: { videoStatus: result.status, videoUrl: videoUrl ?? null, videoError: result.error ?? null },
     });
     if (result.status === "COMPLETED") revalidatePath(`/ads/${variant.creative.campaignId}`);
-    return { success: true as const, status: result.status, videoUrl: result.videoUrl, error: result.error };
+    return { success: true as const, status: result.status, videoUrl, error: result.error };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Status check failed";
     return { success: false as const, error: message };

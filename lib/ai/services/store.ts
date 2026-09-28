@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAIProvider, registerDemoGenerator } from "@/lib/ai";
 import { getAIImageProvider } from "@/lib/ai/image-provider";
+import { persistRemoteAsset } from "@/lib/storage";
 import { storeThemeSchema, storeSectionSchema, type StoreTheme, type StoreSectionData, type StoreBrand } from "@/features/stores/schemas";
 
 export interface StoreContentInput {
@@ -185,7 +186,7 @@ export async function generateHeroImage(
       height: 900,
       label: input.productTitle,
     });
-    return result.url;
+    return await persistRemoteAsset(result.url, "stores");
   } catch {
     return undefined;
   }
@@ -203,7 +204,7 @@ export async function generateProductImage(
       height: 800,
       label: input.productTitle,
     });
-    return result.url;
+    return await persistRemoteAsset(result.url, "stores");
   } catch {
     return undefined;
   }

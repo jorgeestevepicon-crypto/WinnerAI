@@ -1,5 +1,6 @@
 import { getAIProvider, registerDemoGenerator } from "@/lib/ai";
 import { getAIImageProvider } from "@/lib/ai/image-provider";
+import { persistRemoteAsset } from "@/lib/storage";
 import { storeBrandSchema, type StoreBrand } from "@/features/stores/schemas";
 
 export interface BrandInput {
@@ -71,7 +72,7 @@ export async function generateBrandLogo(
       height: 512,
       label: brand.name,
     });
-    return result.url;
+    return await persistRemoteAsset(result.url, "logos");
   } catch {
     return undefined;
   }
