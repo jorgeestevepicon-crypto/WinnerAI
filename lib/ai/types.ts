@@ -52,6 +52,10 @@ export interface AIImageParams {
   height: number;
   /** Short label describing what the image is for, shown in demo placeholders. */
   label: string;
+  /** Higher quality costs more per generation on real providers. Defaults to the provider's own default. */
+  quality?: "low" | "medium" | "high";
+  /** Isolate the subject on a transparent background — for marks/logos, not photo scenes. Ignored by providers that don't support it. */
+  transparentBackground?: boolean;
 }
 
 export interface AIImageResult {

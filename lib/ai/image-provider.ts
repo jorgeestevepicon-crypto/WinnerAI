@@ -75,13 +75,17 @@ const openAIImageProvider: AIImageProvider = {
 
     const size = params.width === params.height ? "1024x1024" : params.width > params.height ? "1536x1024" : "1024x1536";
 
+    const body: Record<string, unknown> = { model: "gpt-image-1", prompt: params.prompt, size, n: 1 };
+    if (params.quality) body.quality = params.quality;
+    if (params.transparentBackground) body.background = "transparent";
+
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${env.ai.imageApiKey}`,
       },
-      body: JSON.stringify({ model: "gpt-image-1", prompt: params.prompt, size, n: 1 }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

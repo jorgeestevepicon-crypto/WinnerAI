@@ -67,10 +67,12 @@ export async function generateBrandLogo(
   try {
     const imageProvider = getAIImageProvider(options);
     const result = await imageProvider.generateImage({
-      prompt: `Minimal logo mark for the brand "${brand.name}". ${brand.logoConcept} Flat vector style, transparent-friendly, no photographic elements, no text other than the brand name itself.`,
-      width: 512,
-      height: 512,
+      prompt: `Professional logo mark for the brand "${brand.name}". ${brand.logoConcept} Flat vector illustration style, clean geometric shapes, limited color palette (2-3 colors max), centered composition, isolated on a plain background. No photorealism, no gradients, no drop shadows, no mockups, no photo backgrounds. If any text appears it must be exactly "${brand.name}" and nothing else, spelled correctly.`,
+      width: 1024,
+      height: 1024,
       label: brand.name,
+      quality: "high",
+      transparentBackground: true,
     });
     return await persistRemoteAsset(result.url, "logos");
   } catch (error) {
