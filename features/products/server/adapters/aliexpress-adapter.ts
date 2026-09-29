@@ -11,17 +11,16 @@ import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter 
  * behalf of a specific user's OAuth-authorized AliExpress account — see
  * lib/aliexpress/oauth.ts and lib/aliexpress/connection.ts for that flow.
  *
- * This has not been exercised against a live AliExpress Open Platform
- * account in this environment. `aliexpress.ds.text.search` is this account's
- * best-known product-search method for the Dropshipping API family, but its
- * exact parameter names and response envelope are less consistently
- * documented than the Affiliate API's — verify against the "Documentation"
- * tab in your Open Platform app console before relying on this, and adjust
- * the method name / request params / response parsing below if they differ.
- * Response parsing below tries a couple of plausible envelope shapes and
- * fails safely (empty results, surfaced error) rather than crashing if none
- * of them match — check the real response the first time this runs and fix
- * the path if needed.
+ * Verified against a live account: `aliexpress.ds.text.search` requires
+ * countryCode, currency, targetCurrency, local and targetLanguage (all
+ * undocumented as "required" anywhere obvious — discovered one at a time
+ * via MissingParameter errors), and its response uses camelCase field names
+ * (title, targetSalePrice, itemMainPic, itemUrl, orders, itemId) rather than
+ * the snake_case most TOP-style docs suggest. There's no human-readable
+ * category name in the response, only numeric cateIds, so category is
+ * always "Uncategorized" for this source. If AliExpress changes this API,
+ * the response envelope paths in extractProducts() are the first thing to
+ * recheck (there are a few plausible ones tried in order).
  */
 
 const METHOD = "aliexpress.ds.text.search";
@@ -46,20 +45,20 @@ function parseVolume(raw: unknown): number {
   return 0;
 }
 
+// Confirmed against a live aliexpress.ds.text.search response — this
+// endpoint uses camelCase field names, not the snake_case the Affiliate
+// API and most TOP-style docs use. `salePrice`/`salePriceCurrency` are in
+// CNY; `targetSalePrice` is the one already converted to `targetCurrency`
+// (USD here). `itemUrl` comes back protocol-relative ("//aliexpress.com/…").
+// There's no human-readable category name in this response, only numeric
+// `cateId`s, so category falls back to "Uncategorized".
 interface DsProduct {
-  product_id?: number | string;
-  item_id?: number | string;
-  product_title?: string;
-  subject?: string;
-  product_image?: string;
-  image_url?: string;
-  product_detail_url?: string;
-  item_url?: string;
-  target_sale_price?: string;
-  sale_price?: string;
-  category_name?: string;
-  trade_volume?: number | string;
-  volume?: number | string;
+  itemId?: number | string;
+  title?: string;
+  itemMainPic?: string;
+  itemUrl?: string;
+  targetSalePrice?: string;
+  orders?: number | string;
 }
 
 /** Digs through a couple of plausible response envelope shapes for the product list, since the exact one hasn't been confirmed against a live response yet. */
@@ -84,16 +83,17 @@ function extractProducts(data: unknown): DsProduct[] {
 }
 
 function extractTitle(p: DsProduct): string | undefined {
-  return p.product_title || p.subject;
+  return p.title;
 }
 function extractImage(p: DsProduct): string | undefined {
-  return p.product_image || p.image_url;
+  return p.itemMainPic;
 }
 function extractUrl(p: DsProduct): string | undefined {
-  return p.product_detail_url || p.item_url;
+  if (!p.itemUrl) return undefined;
+  return p.itemUrl.startsWith("//") ? `https:${p.itemUrl}` : p.itemUrl;
 }
 function extractPrice(p: DsProduct): number {
-  return Number(p.target_sale_price ?? p.sale_price ?? 0);
+  return Number(p.targetSalePrice ?? 0);
 }
 
 export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
@@ -141,12 +141,9 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
 
     const products = extractProducts(data);
     if (products.length === 0) {
-      // The exact response envelope for this method hasn't been confirmed
-      // against a live account yet — log the raw shape so it can be fixed
-      // once we see it, instead of silently returning "no results" forever.
+      // If AliExpress changes this response's envelope shape again, this
+      // logs the raw body so extractProducts can be updated to match.
       console.error(`${METHOD} returned no products via known response paths. Raw response:`, JSON.stringify(data).slice(0, 4000));
-    } else {
-      console.error(`${METHOD} found ${products.length} raw products. First one:`, JSON.stringify(products[0]).slice(0, 2000));
     }
 
     const normalized = products
@@ -155,7 +152,7 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         const cost = extractPrice(product);
         if (!title || !cost || Number.isNaN(cost)) return null;
 
-        const volume = parseVolume(product.trade_volume ?? product.volume);
+        const volume = parseVolume(product.orders);
         // Standard 3x dropshipping markup as a starting suggestion the user
         // is expected to adjust in the product editor — not a claim about
         // real-world pricing data.
@@ -165,14 +162,14 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         return {
           title,
           images: image ? [image] : [],
-          category: product.category_name || "Uncategorized",
+          category: "Uncategorized",
           sourceUrl: extractUrl(product),
           supplierName: "AliExpress Seller",
           cost,
           price: suggestedPrice,
           currency: "USD",
           signals: { demand: demandFromVolume(volume) },
-          metadata: { aliexpressProductId: product.product_id ?? product.item_id, recentOrders: volume },
+          metadata: { aliexpressProductId: product.itemId, recentOrders: volume },
         };
       })
       .filter((product): product is NormalizedProductInput => product !== null);
