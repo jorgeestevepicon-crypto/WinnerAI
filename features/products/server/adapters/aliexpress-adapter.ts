@@ -17,10 +17,12 @@ import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter 
  * via MissingParameter errors), and its response uses camelCase field names
  * (title, targetSalePrice, itemMainPic, itemUrl, orders, itemId) rather than
  * the snake_case most TOP-style docs suggest. There's no human-readable
- * category name in the response, only numeric cateIds, so category is
- * always "Uncategorized" for this source. If AliExpress changes this API,
- * the response envelope paths in extractProducts() are the first thing to
- * recheck (there are a few plausible ones tried in order).
+ * category name in the response, only numeric cateIds, so a product's
+ * `category` here is whatever the user typed into the Category field when
+ * searching (also folded into the actual keyword sent to AliExpress), or
+ * "Uncategorized" if they only searched by keyword. If AliExpress changes
+ * this API, the response envelope paths in extractProducts() are the first
+ * thing to recheck (there are a few plausible ones tried in order).
  */
 
 const METHOD = "aliexpress.ds.text.search";
@@ -111,7 +113,9 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       throw new Error("Your AliExpress account isn't connected yet. Connect it first, then search again.");
     }
 
-    const keywords = params.query?.trim() || params.category?.trim();
+    const category = params.category?.trim();
+    const query = params.query?.trim();
+    const keywords = [category, query].filter(Boolean).join(" ");
     if (!keywords) return [];
 
     const systemParams: Record<string, string> = {
@@ -162,7 +166,11 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         return {
           title,
           images: image ? [image] : [],
-          category: "Uncategorized",
+          // AliExpress's response has no human-readable category name, only
+          // numeric cateIds — using the category the user searched for
+          // (when given) instead lets the Product Finder's category filter
+          // work meaningfully for these products.
+          category: category || "Uncategorized",
           sourceUrl: extractUrl(product),
           supplierName: "AliExpress Seller",
           cost,

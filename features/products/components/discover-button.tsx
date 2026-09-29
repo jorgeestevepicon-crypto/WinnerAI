@@ -27,14 +27,15 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
   const [open, setOpen] = useState(false);
   const [sourceId, setSourceId] = useState(sources.find((s) => s.id === "demo")?.id ?? sources[0]?.id ?? "demo");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
 
   const selectedSource = sources.find((s) => s.id === sourceId);
-  const needsQuery = sourceId !== "demo";
+  const needsKeyword = sourceId !== "demo";
   const needsAliExpressConnection = sourceId === "aliexpress" && selectedSource?.configured && !aliexpressConnected;
 
   async function handleSubmit() {
     setLoading(true);
-    const result = await runProductDiscovery({ sourceId, query: query.trim() || undefined });
+    const result = await runProductDiscovery({ sourceId, query: query.trim() || undefined, category: category.trim() || undefined });
     setLoading(false);
 
     if (!result.success) {
@@ -100,11 +101,24 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Search keywords {!needsQuery && "(optional)"}</Label>
+            <Label>Category {needsKeyword && "(optional if you enter keywords below)"}</Label>
+            <Input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g. Technology, Beauty, Home"
+            />
+            {needsKeyword && category.trim() && (
+              <p className="text-xs text-muted-foreground">
+                Saved products from this search will be tagged with the &quot;{category.trim()}&quot; category, so you can filter by it afterwards.
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Search keywords {(!needsKeyword || category.trim()) && "(optional)"}</Label>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={needsQuery ? "e.g. wireless earbuds" : "Leave blank to browse the demo catalog"}
+              placeholder={needsKeyword ? "e.g. wireless earbuds" : "Leave blank to browse the demo catalog"}
             />
           </div>
         </div>
@@ -115,7 +129,10 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
               Connect AliExpress
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={busy || (needsQuery && !query.trim()) || !selectedSource?.configured}>
+            <Button
+              onClick={handleSubmit}
+              disabled={busy || (needsKeyword && !query.trim() && !category.trim()) || !selectedSource?.configured}
+            >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Search
             </Button>
