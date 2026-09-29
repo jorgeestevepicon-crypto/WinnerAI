@@ -145,9 +145,11 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       // against a live account yet — log the raw shape so it can be fixed
       // once we see it, instead of silently returning "no results" forever.
       console.error(`${METHOD} returned no products via known response paths. Raw response:`, JSON.stringify(data).slice(0, 4000));
+    } else {
+      console.error(`${METHOD} found ${products.length} raw products. First one:`, JSON.stringify(products[0]).slice(0, 2000));
     }
 
-    return products
+    const normalized = products
       .map((product): NormalizedProductInput | null => {
         const title = extractTitle(product);
         const cost = extractPrice(product);
@@ -174,5 +176,11 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         };
       })
       .filter((product): product is NormalizedProductInput => product !== null);
+
+    if (products.length > 0 && normalized.length === 0) {
+      console.error(`${METHOD} found raw products but all were dropped (missing title/price fields) — check the field names in the "found N raw products" log above against DsProduct's field names.`);
+    }
+
+    return normalized;
   },
 };
