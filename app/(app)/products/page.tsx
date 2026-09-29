@@ -36,6 +36,13 @@ export default async function ProductsPage({
     getAliExpressConnectionStatus(),
   ]);
 
+  const sources = productSourceAdapters.map((a) => ({
+    id: a.id,
+    label: a.label,
+    configured: a.configured,
+    disabledReason: a.disabledReason,
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -43,15 +50,7 @@ export default async function ProductsPage({
           <h1 className="text-2xl font-semibold tracking-tight">Product Finder</h1>
           <p className="text-sm text-muted-foreground">Discover and score potentially winning products.</p>
         </div>
-        <DiscoverButton
-          sources={productSourceAdapters.map((a) => ({
-            id: a.id,
-            label: a.label,
-            configured: a.configured,
-            disabledReason: a.disabledReason,
-          }))}
-          aliexpressConnected={isAliExpressConnected}
-        />
+        <DiscoverButton sources={sources} aliexpressConnected={isAliExpressConnected} />
       </div>
 
       {aliexpressConnected && (
@@ -66,7 +65,7 @@ export default async function ProductsPage({
         </div>
       )}
 
-      <ProductFilters categories={categories} countries={countries} />
+      <ProductFilters categories={categories} countries={countries} sources={sources} aliexpressConnected={isAliExpressConnected} />
 
       <ProductResults products={products} />
     </div>

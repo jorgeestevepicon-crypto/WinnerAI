@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +16,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { COMMON_PRODUCT_CATEGORIES } from "@/features/products/categories";
+import { runProductDiscovery } from "@/features/products/server/actions";
+import { getAliExpressAuthUrl } from "@/features/aliexpress/server/actions";
+import type { DiscoverableSource } from "@/features/products/components/discover-button";
+
+const LAST_SOURCE_STORAGE_KEY = "productFinder.lastSource";
 
 const sortOptions = [
   { value: "winningScore", label: "Winning Score" },
@@ -24,12 +31,31 @@ const sortOptions = [
   { value: "createdAt", label: "Newest" },
 ];
 
-export function ProductFilters({ categories, countries }: { categories: string[]; countries: string[] }) {
+export function ProductFilters({
+  categories,
+  countries,
+  sources,
+  aliexpressConnected,
+}: {
+  categories: string[];
+  countries: string[];
+  sources: DiscoverableSource[];
+  aliexpressConnected: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("query") ?? "");
+  // Starts at "demo" to match the server-rendered markup, then picks up the
+  // remembered source client-side once mounted (avoids an SSR/hydration
+  // mismatch from reading localStorage during the initial render).
+  const [source, setSource] = useState("demo");
+  useEffect(() => {
+    const stored = window.localStorage.getItem(LAST_SOURCE_STORAGE_KEY);
+    if (stored) setSource(stored);
+  }, []);
+  const [searching, setSearching] = useState(false);
   const [advanced, setAdvanced] = useState({
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
@@ -46,6 +72,45 @@ export function ProductFilters({ categories, countries }: { categories: string[]
       else params.delete(key);
     }
     router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function handleSourceChange(value: string) {
+    setSource(value);
+    if (typeof window !== "undefined") window.localStorage.setItem(LAST_SOURCE_STORAGE_KEY, value);
+  }
+
+  const selectedSource = sources.find((s) => s.id === source);
+  const allCategories = Array.from(new Set([...COMMON_PRODUCT_CATEGORIES, ...categories])).sort();
+
+  async function handleCategoryChange(value: string) {
+    const category = value === "all" ? undefined : value;
+
+    // For a real (non-demo) source, changing the category runs a fresh
+    // search against that source instead of just filtering what's already
+    // saved — so picking a category you haven't searched before actually
+    // fetches products for it, not an empty list.
+    if (source !== "demo" && category) {
+      if (source === "aliexpress" && !aliexpressConnected) {
+        const authResult = await getAliExpressAuthUrl();
+        if (!authResult.success) {
+          toast.error(authResult.error);
+          return;
+        }
+        window.location.href = authResult.url;
+        return;
+      }
+      setSearching(true);
+      const result = await runProductDiscovery({ sourceId: source, category });
+      setSearching(false);
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.count > 0) toast.success(`Found ${result.count} products in "${category}"`);
+    }
+
+    applyParams({ category });
   }
 
   return (
@@ -66,13 +131,32 @@ export function ProductFilters({ categories, countries }: { categories: string[]
         />
       </form>
 
-      <Select value={searchParams.get("category") ?? "all"} onValueChange={(v) => applyParams({ category: v === "all" ? undefined : v })}>
+      <div className="w-full sm:w-40">
+        <Select value={source} onValueChange={handleSourceChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Source" />
+          </SelectTrigger>
+          <SelectContent>
+            {sources.map((s) => (
+              <SelectItem key={s.id} value={s.id} disabled={!s.configured}>
+                {s.label}
+                {!s.configured ? " (not configured)" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {selectedSource?.id === "aliexpress" && !aliexpressConnected && (
+          <p className="mt-1 text-xs text-muted-foreground">Picking a category will ask you to connect AliExpress.</p>
+        )}
+      </div>
+
+      <Select value={searchParams.get("category") ?? "all"} onValueChange={handleCategoryChange} disabled={searching}>
         <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder="Category" />
+          {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <SelectValue placeholder="Category" />}
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All categories</SelectItem>
-          {categories.map((c) => (
+          {allCategories.map((c) => (
             <SelectItem key={c} value={c}>
               {c}
             </SelectItem>
