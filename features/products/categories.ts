@@ -18,3 +18,25 @@ export const COMMON_PRODUCT_CATEGORIES = [
   "Office",
   "Automotive",
 ] as const;
+
+/**
+ * Sources whose search is a real product-title text search (AliExpress's
+ * ds.text.search, notably) return zero results for an abstract category
+ * word on its own — sellers don't title products just "Technology". This
+ * maps each category to an actual product-ish search phrase to send
+ * instead, while the category itself is still what gets saved/filtered on.
+ */
+export const CATEGORY_SEARCH_TERMS: Record<(typeof COMMON_PRODUCT_CATEGORIES)[number], string> = {
+  Technology: "gadgets",
+  Electronics: "electronics accessories",
+  Beauty: "beauty tools",
+  "Health & Wellness": "health wellness",
+  "Home & Garden": "home decor",
+  Kitchen: "kitchen gadgets",
+  "Pet Supplies": "pet accessories",
+  "Sports & Outdoors": "sports gear",
+  "Fashion & Accessories": "fashion accessories",
+  "Toys & Games": "toys",
+  Office: "office supplies",
+  Automotive: "car accessories",
+};

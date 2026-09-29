@@ -2,6 +2,7 @@ import "server-only";
 import { env } from "@/config/env";
 import { signParams, timestampGMT8, callAliExpress } from "@/lib/aliexpress/sign";
 import { getValidAccessToken } from "@/lib/aliexpress/connection";
+import { CATEGORY_SEARCH_TERMS } from "@/features/products/categories";
 import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter } from "@/features/products/types";
 
 /**
@@ -115,7 +116,13 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
 
     const category = params.category?.trim();
     const query = params.query?.trim();
-    const keywords = [category, query].filter(Boolean).join(" ");
+    // AliExpress's search is a real product-title text search — an abstract
+    // category word alone (e.g. "Technology") reliably returns zero results,
+    // since sellers don't title products that way. Translate known
+    // categories into an actual product-ish search phrase; the category
+    // itself is still what gets saved/filtered on below.
+    const categorySearchTerm = category && category in CATEGORY_SEARCH_TERMS ? CATEGORY_SEARCH_TERMS[category as keyof typeof CATEGORY_SEARCH_TERMS] : category;
+    const keywords = [categorySearchTerm, query].filter(Boolean).join(" ");
     if (!keywords) return [];
 
     const systemParams: Record<string, string> = {
