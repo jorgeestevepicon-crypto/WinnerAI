@@ -128,6 +128,7 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       targetCurrency: "USD",
       currency: "USD",
       targetLanguage: "EN",
+      local: "en_US",
       countryCode: params.country?.trim() || "US",
     };
     systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
