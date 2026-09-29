@@ -45,6 +45,8 @@ export interface ProductSearchParams {
   limit?: number;
   /** The user running the search — needed by sources that authenticate per-user (e.g. AliExpress's OAuth-connected Dropshipping API), rather than app-wide. */
   userId?: string;
+  /** Currency to request cost/price in (e.g. from a user's target-market config). Adapters that don't support a specific currency fall back to their own default. */
+  currency?: string;
 }
 
 /**

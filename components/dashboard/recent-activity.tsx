@@ -1,4 +1,4 @@
-import { History, Search, Store, Megaphone, ShoppingBag, Bookmark, CreditCard, Trash2, Package } from "lucide-react";
+import { History, Search, Store, Megaphone, ShoppingBag, Bookmark, CreditCard, Trash2, Package, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { relativeTime } from "@/lib/utils";
@@ -19,6 +19,9 @@ const actionCopy: Record<ActivityAction, { label: string; icon: typeof History }
   shopify_disconnected: { label: "Disconnected Shopify", icon: ShoppingBag },
   aliexpress_connected: { label: "Connected AliExpress", icon: ShoppingBag },
   aliexpress_disconnected: { label: "Disconnected AliExpress", icon: ShoppingBag },
+  winning_product_added_manually: { label: "Added a Winning Product manually", icon: TrendingUp },
+  winning_status_changed: { label: "Updated a Winning Product's status", icon: TrendingUp },
+  ad_test_added: { label: "Added an ad test", icon: Megaphone },
   subscription_updated: { label: "Updated subscription", icon: CreditCard },
 };
 

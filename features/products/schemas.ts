@@ -20,5 +20,7 @@ export const discoverySchema = z.object({
   query: z.string().optional(),
   category: z.string().optional(),
   limit: z.coerce.number().min(1).max(50).default(50),
+  country: z.string().optional(),
+  currency: z.string().optional(),
 });
 export type DiscoveryInput = z.infer<typeof discoverySchema>;

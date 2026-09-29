@@ -61,6 +61,7 @@ model User {
   adCampaigns   AdCampaign[]
   shopifyConnections ShopifyConnection[]
   aliexpressConnection AliExpressConnection?
+  winningScoreConfig   WinningScoreConfig?
   aiJobs        AIJob[]
   aiConversations AIConversation[]
   activityLogs  ActivityLog[]
@@ -141,6 +142,167 @@ enum ProductSource {
   OTHER
 }
 
+// ---------------------------------------------------------------------------
+// Winning Products (dropshipping product validation module)
+// ---------------------------------------------------------------------------
+
+enum WinningProductStatus {
+  CANDIDATE
+  IN_TEST
+  WINNER
+  DISCARDED
+}
+
+// Where the user personally spotted this product being advertised — never
+// scraped, always a manual note the user enters themselves alongside a link.
+enum DiscoveryOrigin {
+  TIKTOK
+  INSTAGRAM
+  META_ADS
+  OTHER
+}
+
+enum CompetitionLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TrendDirection {
+  RISING
+  STABLE
+  FALLING
+}
+
+// One row per time the product's real price/order-count/rating is captured
+// (initial discovery, a manual "refresh from AliExpress", or a later
+// re-search) — lets the score engine compute genuine order-growth between
+// captures instead of a single point-in-time snapshot.
+model ProductSnapshot {
+  id        String   @id @default(cuid())
+  productId String
+
+  price     Float?
+  cost      Float?
+  orders    Int?
+  rating    Float?
+
+  capturedAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, capturedAt])
+}
+
+// Manual, user-entered signals the AliExpress API has no way to provide.
+// googleTrendsManual is pre-filled from the real Google Trends integration
+// when available (see features/winning-products/server/scoring.ts) — this
+// field exists so the user can override it, not as the primary source.
+model ProductManualSignal {
+  id        String @id @default(cuid())
+  productId String @unique
+
+  wowEffect             Int?
+  foundInPhysicalStores Boolean?
+  competitionLevel      CompetitionLevel?
+  googleTrendsManual    TrendDirection?
+  notes                 String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// A single ad test run for a product (any platform — entered manually, this
+// app never has real ad-platform credentials for arbitrary user accounts).
+// CTR/CPC/CPA/ROAS/net profit are always computed from these raw numbers at
+// read time (features/winning-products/server/ad-test-metrics.ts), never
+// stored, so they can't drift out of sync with an edited field.
+model ProductAdTest {
+  id        String @id @default(cuid())
+  productId String
+
+  name      String?
+  platform  String?
+  startDate DateTime?
+  endDate   DateTime?
+
+  dailyBudget Float?
+  totalSpend  Float?
+  impressions Int?
+  clicks      Int?
+  addToCarts  Int?
+  purchases   Int?
+  revenue     Float?
+  currency    String @default("USD")
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// Gate before scaling ad spend on a product. readyToScale is only ever set
+// true server-side (features/winning-products/server/actions.ts) when the
+// three checks above it are already true — never settable directly by the
+// client, so the gate can't be bypassed from the UI.
+model ProductSupplierChecklist {
+  id        String  @id @default(cuid())
+  productId String  @unique
+
+  sampleOrdered      Boolean @default(false)
+  sampleReceived     Boolean @default(false)
+  qualityOk          Boolean @default(false)
+  actualShippingDays Int?
+  notes              String? @db.Text
+  readyToScale       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// Single editable place for the Winning Products scoring weights/thresholds
+// (features/winning-products/server/config.ts provides defaults + get-or-create).
+// One row per user, same convention as AliExpressConnection.
+model WinningScoreConfig {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Weights (0-1-ish, relative to each other — normalized/redistributed by
+  // the score engine when a given factor's data isn't available yet).
+  weightMargin           Float @default(0.20)
+  weightPriceRangeFit    Float @default(0.10)
+  weightDemand           Float @default(0.15)
+  weightDemandGrowth     Float @default(0.10)
+  weightProviderQuality  Float @default(0.10)
+  weightLogistics        Float @default(0.10)
+  weightWowEffect        Float @default(0.10)
+  weightPhysicalStores   Float @default(0.05)
+  weightCompetitionLevel Float @default(0.05)
+  weightGoogleTrends     Float @default(0.05)
+
+  // Thresholds
+  marginTargetMultiplier Float  @default(3)
+  idealPriceMin          Float  @default(20)
+  idealPriceMax          Float  @default(60)
+  priceCurrency          String @default("EUR")
+  targetCountry          String @default("ES")
+  maxIdealWeightGrams    Float  @default(1000)
+  minRoasForWinner       Float  @default(2.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Supplier {
   id         String   @id @default(cuid())
   userId     String?
@@ -191,6 +353,17 @@ model Product {
   saved     Boolean @default(false)
   featured  Boolean @default(false)
 
+  // Dropshipping "winning product" validation module (Winning Products) —
+  // populated only for products that entered that workflow; every other
+  // source/row leaves these null, same convention as the score columns above.
+  winningStatus   WinningProductStatus?
+  weightGrams     Int?
+  shippingDays    Int?
+  storeRating     Float?
+  reviewCount     Int?
+  discoveryOrigin DiscoveryOrigin?
+  discoveryUrl    String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
@@ -201,10 +374,16 @@ model Product {
   stores     Store[]
   campaigns  AdCampaign[]
 
+  snapshots          ProductSnapshot[]
+  manualSignal       ProductManualSignal?
+  adTests            ProductAdTest[]
+  supplierChecklist  ProductSupplierChecklist?
+
   @@index([userId])
   @@index([winningScore])
   @@index([category])
   @@index([source])
+  @@index([winningStatus])
 }
 
 model ProductAnalysis {

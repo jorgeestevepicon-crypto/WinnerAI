@@ -15,6 +15,9 @@ export type ActivityAction =
   | "shopify_disconnected"
   | "aliexpress_connected"
   | "aliexpress_disconnected"
+  | "winning_product_added_manually"
+  | "winning_status_changed"
+  | "ad_test_added"
   | "subscription_updated";
 
 export async function logActivity(params: {

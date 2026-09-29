@@ -22,6 +22,9 @@ const actionLabels: Record<ActivityAction, string> = {
   shopify_disconnected: "Disconnected Shopify",
   aliexpress_connected: "Connected AliExpress",
   aliexpress_disconnected: "Disconnected AliExpress",
+  winning_product_added_manually: "Added a Winning Product manually",
+  winning_status_changed: "Updated a Winning Product's status",
+  ad_test_added: "Added an ad test",
   subscription_updated: "Updated subscription",
 };
 

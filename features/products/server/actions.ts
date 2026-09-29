@@ -36,6 +36,8 @@ export async function runProductDiscovery(input: unknown) {
       category: parsed.data.category,
       limit: parsed.data.limit,
       userId: user.id,
+      country: parsed.data.country,
+      currency: parsed.data.currency,
     });
   } catch (error) {
     console.error(`${adapter.label} product search failed`, error);
@@ -93,7 +95,7 @@ export async function runProductDiscovery(input: unknown) {
     return { success: true as const, count: 0 };
   }
 
-  await prisma.$transaction(
+  const created = await prisma.$transaction(
     newResults.map((item) =>
       prisma.product.create({
         data: { ...toProductCreateInput(item, adapter.id as ProductSourceId), userId: user.id },
@@ -102,7 +104,7 @@ export async function runProductDiscovery(input: unknown) {
   );
 
   revalidatePath("/products");
-  return { success: true as const, count: newResults.length };
+  return { success: true as const, count: newResults.length, productIds: created.map((p) => p.id) };
 }
 
 export async function toggleSaveProduct(productId: string) {

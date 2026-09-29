@@ -35,7 +35,7 @@ const METHOD = "aliexpress.ds.text.search";
  * 10,000+ recent orders scores ~100. This is a heuristic derived from a
  * real signal, not a fabricated number.
  */
-function demandFromVolume(volume: number): number {
+export function demandFromVolume(volume: number): number {
   if (volume <= 0) return 0;
   return Math.round(Math.min(100, (Math.log10(volume + 1) / Math.log10(10000)) * 100));
 }
@@ -125,7 +125,7 @@ async function fetchRecommendFeed(accessToken: string, params: ProductSearchPara
       feed_name: "general",
       page_no: "1",
       page_size: String(Math.min(params.limit ?? 20, 50)),
-      target_currency: "USD",
+      target_currency: params.currency?.trim() || "USD",
       target_language: "EN",
       country_code: params.country?.trim() || "US",
       local: "en_US",
@@ -146,6 +146,7 @@ async function fetchRecommendFeed(accessToken: string, params: ProductSearchPara
 }
 
 async function searchByKeyword(accessToken: string, keywords: string, params: ProductSearchParams): Promise<DsProduct[]> {
+  const currency = params.currency?.trim() || "USD";
   const systemParams: Record<string, string> = {
     app_key: env.aliexpress.appKey!,
     method: METHOD,
@@ -157,8 +158,8 @@ async function searchByKeyword(accessToken: string, keywords: string, params: Pr
     keyWord: keywords,
     pageSize: String(Math.min(params.limit ?? 20, 50)),
     pageIndex: "1",
-    targetCurrency: "USD",
-    currency: "USD",
+    targetCurrency: currency,
+    currency,
     targetLanguage: "EN",
     local: "en_US",
     countryCode: params.country?.trim() || "US",
@@ -258,6 +259,8 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       return true;
     });
 
+    const currency = params.currency?.trim() || "USD";
+
     const normalized = products
       .map((product): NormalizedProductInput | null => {
         const title = extractTitle(product);
@@ -290,9 +293,13 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
           supplierName: "AliExpress Seller",
           cost,
           price: suggestedPrice,
-          currency: "USD",
+          currency,
           signals: { demand: demandFromVolume(volume) },
-          metadata: { aliexpressProductId: product.itemId, recentOrders: volume },
+          // productRating (0-100, AliExpress's evaluateRate) is kept here —
+          // not as its own Product column — so the Winning Products module
+          // can seed a ProductSnapshot's rating without a second real-time
+          // AliExpress call. See features/winning-products/server/snapshots.ts.
+          metadata: { aliexpressProductId: product.itemId, recentOrders: volume, productRating: rating },
         };
       })
       .filter((product): product is NormalizedProductInput => product !== null)
