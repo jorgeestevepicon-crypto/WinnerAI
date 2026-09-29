@@ -62,6 +62,15 @@ interface DsProduct {
   itemUrl?: string;
   targetSalePrice?: string;
   orders?: number | string;
+  evaluateRate?: string;
+}
+
+const MIN_RATING_PERCENT = 80;
+
+function extractRating(p: DsProduct): number | undefined {
+  if (p.evaluateRate === undefined) return undefined;
+  const value = Number(p.evaluateRate);
+  return Number.isNaN(value) ? undefined : value;
 }
 
 /** Digs through a couple of plausible response envelope shapes for the product list, since the exact one hasn't been confirmed against a live response yet. */
@@ -141,6 +150,13 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       targetLanguage: "EN",
       local: "en_US",
       countryCode: params.country?.trim() || "US",
+      // Surfaces the best-selling matches first — a much stronger "is this
+      // actually worth dropshipping" signal than raw keyword relevance,
+      // especially since the API seems to cap results per page regardless
+      // of pageSize (only the top handful matter most). Unverified field
+      // name/value — if this errors, check the sort options this account's
+      // "Documentation" tab lists for aliexpress.ds.text.search.
+      sort: "LAST_VOLUME_DESC",
     };
     systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
 
@@ -162,6 +178,13 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         const title = extractTitle(product);
         const cost = extractPrice(product);
         if (!title || !cost || Number.isNaN(cost)) return null;
+
+        // A real buyer-rating signal, not fabricated — skip products with a
+        // poor track record rather than suggest them for a store. Only
+        // filters when the rating is actually present; missing data isn't
+        // treated as a bad rating.
+        const rating = extractRating(product);
+        if (rating !== undefined && rating < MIN_RATING_PERCENT) return null;
 
         const volume = parseVolume(product.orders);
         // Standard 3x dropshipping markup as a starting suggestion the user
