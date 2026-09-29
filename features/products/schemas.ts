@@ -19,6 +19,6 @@ export const discoverySchema = z.object({
   sourceId: z.string().default("demo"),
   query: z.string().optional(),
   category: z.string().optional(),
-  limit: z.coerce.number().min(1).max(50).default(18),
+  limit: z.coerce.number().min(1).max(50).default(50),
 });
 export type DiscoveryInput = z.infer<typeof discoverySchema>;

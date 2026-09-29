@@ -182,6 +182,10 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
       })
       .filter((product): product is NormalizedProductInput => product !== null);
 
+    if (normalized.length < products.length) {
+      console.error(`${METHOD}: AliExpress returned ${products.length} raw products for "${keywords}", but only ${normalized.length} had both a title and a usable price and were kept.`);
+    }
+
     if (products.length > 0 && normalized.length === 0) {
       console.error(`${METHOD} found raw products but all were dropped (missing title/price fields) — check the field names in the "found N raw products" log above against DsProduct's field names.`);
     }
