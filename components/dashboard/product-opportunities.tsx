@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,28 +8,30 @@ import { WinningScoreBadge } from "@/components/shared/winning-score-badge";
 import { formatCurrency } from "@/lib/utils";
 import type { getTopProductOpportunities } from "@/lib/dashboard/queries";
 
-export function ProductOpportunities({
+export async function ProductOpportunities({
   products,
 }: {
   products: Awaited<ReturnType<typeof getTopProductOpportunities>>;
 }) {
+  const t = await getTranslations("dashboard.productOpportunities");
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Product Opportunities</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/products">View all</Link>
+          <Link href="/products">{t("viewAll")}</Link>
         </Button>
       </CardHeader>
       <CardContent>
         {products.length === 0 ? (
           <EmptyState
             icon={Search}
-            title="No scored products yet"
-            description="Run the Product Finder to discover and score potential winning products."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             action={
               <Button size="sm" className="mt-2" asChild>
-                <Link href="/products">Find products</Link>
+                <Link href="/products">{t("findProducts")}</Link>
               </Button>
             }
           />
@@ -43,7 +46,7 @@ export function ProductOpportunities({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{product.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(product.price, product.currency)} · {product.category ?? "Uncategorized"}
+                    {formatCurrency(product.price, product.currency)} · {product.category ?? t("uncategorized")}
                   </p>
                 </div>
                 <WinningScoreBadge score={product.winningScore} />

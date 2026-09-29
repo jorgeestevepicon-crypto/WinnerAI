@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Package, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -7,17 +8,19 @@ import { WinningStatusBadge } from "@/features/winning-products/components/statu
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import type { ProductWithWinningData, DropshippingScoreResult } from "@/features/winning-products/types";
 
-export function WinningProductsTable({
+export async function WinningProductsTable({
   items,
 }: {
   items: { product: ProductWithWinningData; result: DropshippingScoreResult; latestOrders: number | null }[];
 }) {
+  const t = await getTranslations("winningProducts.page");
+
   if (items.length === 0) {
     return (
       <EmptyState
         icon={Search}
-        title="No candidates yet"
-        description="Click 'Find candidates' to discover real AliExpress products, or add one manually."
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
         className="mt-4"
       />
     );
@@ -28,12 +31,12 @@ export function WinningProductsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Score</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Margin</TableHead>
-            <TableHead>Orders</TableHead>
+            <TableHead>{t("columnProduct")}</TableHead>
+            <TableHead>{t("columnStatus")}</TableHead>
+            <TableHead>{t("columnScore")}</TableHead>
+            <TableHead>{t("columnPrice")}</TableHead>
+            <TableHead>{t("columnMargin")}</TableHead>
+            <TableHead>{t("columnOrders")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

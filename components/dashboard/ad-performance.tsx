@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Megaphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,24 +7,26 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import type { getAdPerformanceSummary } from "@/lib/dashboard/queries";
 
-export function AdPerformance({ summary }: { summary: Awaited<ReturnType<typeof getAdPerformanceSummary>> }) {
+export async function AdPerformance({ summary }: { summary: Awaited<ReturnType<typeof getAdPerformanceSummary>> }) {
+  const t = await getTranslations("dashboard.adPerformance");
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Ad Performance</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/ads">View all</Link>
+          <Link href="/ads">{t("viewAll")}</Link>
         </Button>
       </CardHeader>
       <CardContent>
         {summary.campaigns.length === 0 ? (
           <EmptyState
             icon={Megaphone}
-            title="No ad campaigns yet"
-            description="Generate ad copy and creatives with the AI Ad Studio."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             action={
               <Button size="sm" className="mt-2" asChild>
-                <Link href="/ads">Create ads</Link>
+                <Link href="/ads">{t("createAds")}</Link>
               </Button>
             }
           />
@@ -35,7 +38,7 @@ export function AdPerformance({ summary }: { summary: Awaited<ReturnType<typeof 
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{campaign.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {campaign.platform} · {campaign._count.creatives} creative{campaign._count.creatives === 1 ? "" : "s"}
+                      {campaign.platform} · {t("creatives", { count: campaign._count.creatives })}
                     </p>
                   </div>
                   <Badge variant="outline">{campaign.status}</Badge>
@@ -43,9 +46,7 @@ export function AdPerformance({ summary }: { summary: Awaited<ReturnType<typeof 
               ))}
             </div>
             {!summary.hasRealData && (
-              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                Awaiting real campaign data. Connect Meta, TikTok, Google or Pinterest to see CTR, CPC and ROAS here.
-              </p>
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">{t("awaitingRealData")}</p>
             )}
           </div>
         )}

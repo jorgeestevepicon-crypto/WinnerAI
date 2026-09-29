@@ -1,20 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import { Progress } from "@/components/ui/progress";
 import type { DropshippingScoreResult } from "@/features/winning-products/types";
 
-const FACTOR_LABELS: Record<keyof DropshippingScoreResult["breakdown"], string> = {
-  margin: "Margin",
-  priceRangeFit: "Ideal price range",
-  demand: "Demand",
-  demandGrowth: "Demand growth",
-  providerQuality: "Provider quality",
-  logistics: "Logistics",
-  wowEffect: "Wow effect",
-  physicalStores: "Physical store availability",
-  competitionLevel: "Competition level",
-  googleTrends: "Google Trends",
-};
-
-export function ScoreBreakdown({ result }: { result: DropshippingScoreResult }) {
+export async function ScoreBreakdown({ result }: { result: DropshippingScoreResult }) {
+  const t = await getTranslations("winningProducts");
   const entries = Object.entries(result.breakdown).filter(([, value]) => value !== undefined) as [keyof DropshippingScoreResult["breakdown"], number][];
 
   return (
@@ -22,7 +11,7 @@ export function ScoreBreakdown({ result }: { result: DropshippingScoreResult }) 
       {entries.map(([key, value]) => (
         <div key={key} className="space-y-1">
           <div className="flex justify-between text-sm">
-            <span>{FACTOR_LABELS[key]}</span>
+            <span>{t(`scoreFactors.${key}`)}</span>
             <span className="text-muted-foreground">{value}</span>
           </div>
           <Progress value={value} />
@@ -30,7 +19,7 @@ export function ScoreBreakdown({ result }: { result: DropshippingScoreResult }) 
       ))}
       {result.missingFactors.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Not yet included (no real data available): {result.missingFactors.join(", ")}.
+          {t("scoreBreakdown.notAvailable", { factors: result.missingFactors.map((key) => t(`scoreFactors.${key}`)).join(", ") })}
         </p>
       )}
     </div>

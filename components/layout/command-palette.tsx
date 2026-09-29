@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Settings, History, Search, Store, Sparkles, Megaphone, ShoppingBag, LineChart, CreditCard, Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,10 +12,12 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
+import { mainNav, bottomNav, adminNav } from "@/config/nav";
 
 export function CommandPalette({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
+  const t = useTranslations("nav");
 
   React.useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -33,48 +35,25 @@ export function CommandPalette({ isAdmin }: { isAdmin: boolean }) {
     router.push(href);
   }
 
+  const items = [...mainNav, ...(isAdmin ? adminNav : [])];
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder="Search pages and actions..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Navigate">
-          <CommandItem onSelect={() => go("/dashboard")}>
-            <LayoutDashboard className="h-4 w-4" /> Dashboard
-          </CommandItem>
-          <CommandItem onSelect={() => go("/products")}>
-            <Search className="h-4 w-4" /> Product Finder
-          </CommandItem>
-          <CommandItem onSelect={() => go("/store-builder")}>
-            <Sparkles className="h-4 w-4" /> Store Builder
-          </CommandItem>
-          <CommandItem onSelect={() => go("/stores")}>
-            <Store className="h-4 w-4" /> Stores
-          </CommandItem>
-          <CommandItem onSelect={() => go("/ads")}>
-            <Megaphone className="h-4 w-4" /> Ad Studio
-          </CommandItem>
-          <CommandItem onSelect={() => go("/shopify")}>
-            <ShoppingBag className="h-4 w-4" /> Shopify
-          </CommandItem>
-          <CommandItem onSelect={() => go("/analytics")}>
-            <LineChart className="h-4 w-4" /> Analytics
-          </CommandItem>
-          <CommandItem onSelect={() => go("/billing")}>
-            <CreditCard className="h-4 w-4" /> Billing
-          </CommandItem>
-          <CommandItem onSelect={() => go("/activity")}>
-            <History className="h-4 w-4" /> Activity
-          </CommandItem>
-          <CommandItem onSelect={() => go("/settings")}>
-            <Settings className="h-4 w-4" /> Settings
-            <CommandShortcut>⌘K</CommandShortcut>
-          </CommandItem>
-          {isAdmin && (
-            <CommandItem onSelect={() => go("/admin")}>
-              <Shield className="h-4 w-4" /> Admin
+          {items.map((item) => (
+            <CommandItem key={item.href} onSelect={() => go(item.href)}>
+              <item.icon className="h-4 w-4" /> {t(item.titleKey)}
             </CommandItem>
-          )}
+          ))}
+          {bottomNav.map((item) => (
+            <CommandItem key={item.href} onSelect={() => go(item.href)}>
+              <item.icon className="h-4 w-4" /> {t(item.titleKey)}
+              <CommandShortcut>⌘K</CommandShortcut>
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

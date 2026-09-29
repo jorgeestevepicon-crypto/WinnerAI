@@ -45,7 +45,7 @@ export interface DropshippingScoreBreakdown {
 export interface DropshippingScoreResult {
   score: number;
   breakdown: DropshippingScoreBreakdown;
-  /** Human-readable factor names not currently included in the score, so the UI can explain why. */
-  missingFactors: string[];
+  /** Factor keys not currently included in the score (translate via the "winningProducts.scoreFactors" namespace), so the UI can explain why. */
+  missingFactors: (keyof DropshippingScoreBreakdown)[];
   partial: boolean;
 }

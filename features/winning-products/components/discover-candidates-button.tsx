@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Sparkles, Loader2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { COMMON_PRODUCT_CATEGORIES } from "@/features/products/categories";
 
 export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressConnected: boolean }) {
   const router = useRouter();
+  const t = useTranslations("winningProducts.discoverDialog");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -42,10 +44,10 @@ export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressCo
       return;
     }
     if (result.count === 0) {
-      toast.info("No new candidates matched this search.");
+      toast.info(t("noneFound"));
       return;
     }
-    toast.success(`Found ${result.count} new candidates`);
+    toast.success(t("foundCount", { count: result.count }));
     setOpen(false);
     router.refresh();
   }
@@ -55,24 +57,24 @@ export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressCo
       <DialogTrigger asChild>
         <Button>
           <Sparkles className="h-4 w-4" />
-          Find candidates
+          {t("trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Find winning-product candidates</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         {!aliexpressConnected ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Connect your AliExpress account to search for candidates.</p>
+            <p className="text-sm text-muted-foreground">{t("connectFirst")}</p>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Category (optional)</Label>
+              <Label>{t("categoryLabel")}</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Any category" />
+                  <SelectValue placeholder={t("anyCategory")} />
                 </SelectTrigger>
                 <SelectContent>
                   {COMMON_PRODUCT_CATEGORIES.map((c) => (
@@ -84,8 +86,8 @@ export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressCo
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Search keywords (optional)</Label>
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. wireless earbuds" />
+              <Label>{t("keywordsLabel")}</Label>
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("keywordsPlaceholder")} />
             </div>
           </div>
         )}
@@ -93,12 +95,12 @@ export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressCo
           {!aliexpressConnected ? (
             <Button onClick={handleConnect} disabled={connecting}>
               {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-              Connect AliExpress
+              {t("connectAliExpress")}
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={loading || (!query.trim() && !category.trim())}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Search
+              {t("search")}
             </Button>
           )}
         </DialogFooter>

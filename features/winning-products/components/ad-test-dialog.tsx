@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ const NUMERIC_FIELDS = ["dailyBudget", "totalSpend", "impressions", "clicks", "a
 
 export function AdTestDialog({ productId, currency }: { productId: string; currency: string }) {
   const router = useRouter();
+  const t = useTranslations("winningProducts.adTest");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -45,7 +47,7 @@ export function AdTestDialog({ productId, currency }: { productId: string; curre
       toast.error(result.error);
       return;
     }
-    toast.success("Test added");
+    toast.success(t("addTest"));
     setOpen(false);
     setName("");
     setPlatform("");
@@ -58,22 +60,22 @@ export function AdTestDialog({ productId, currency }: { productId: string; curre
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <PlusCircle className="h-4 w-4" />
-          Add ad test
+          {t("addAdTest")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New ad test</DialogTitle>
+          <DialogTitle>{t("newAdTest")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Name (optional)</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Test 1" />
+              <Label>{t("nameLabel")}</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePlaceholder")} />
             </div>
             <div className="space-y-1.5">
-              <Label>Platform</Label>
-              <Input value={platform} onChange={(e) => setPlatform(e.target.value)} placeholder="TikTok, Meta..." />
+              <Label>{t("platformLabel")}</Label>
+              <Input value={platform} onChange={(e) => setPlatform(e.target.value)} placeholder={t("platformPlaceholder")} />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -92,7 +94,7 @@ export function AdTestDialog({ productId, currency }: { productId: string; curre
         <DialogFooter>
           <Button onClick={handleSubmit} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
-            Add test
+            {t("addTest")}
           </Button>
         </DialogFooter>
       </DialogContent>

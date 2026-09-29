@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/session";
 import {
   getDashboardStats,
@@ -17,6 +18,7 @@ export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const t = await getTranslations("dashboard");
 
   const [stats, products, stores, ads, activity] = await Promise.all([
     getDashboardStats(user.id),
@@ -29,8 +31,11 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""}</h1>
-        <p className="text-sm text-muted-foreground">Here&apos;s what&apos;s happening across your workspace.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t("welcomeBack")}
+          {user.name ? `, ${user.name.split(" ")[0]}` : ""}
+        </h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <StatCards stats={stats} />

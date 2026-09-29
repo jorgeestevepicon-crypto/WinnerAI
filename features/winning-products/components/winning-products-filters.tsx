@@ -1,30 +1,33 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "All statuses" },
-  { value: "CANDIDATE", label: "Candidate" },
-  { value: "IN_TEST", label: "In test" },
-  { value: "WINNER", label: "Winner" },
-  { value: "DISCARDED", label: "Discarded" },
-];
-
-const SORT_OPTIONS = [
-  { value: "score", label: "Score" },
-  { value: "status", label: "Status" },
-  { value: "margin", label: "Margin" },
-  { value: "orders", label: "Orders" },
-  { value: "createdAt", label: "Newest" },
-];
 
 export function WinningProductsFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations("winningProducts.filters");
+  const tStatus = useTranslations("winningProducts.status");
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: t("allStatuses") },
+    { value: "CANDIDATE", label: tStatus("candidate") },
+    { value: "IN_TEST", label: tStatus("inTest") },
+    { value: "WINNER", label: tStatus("winner") },
+    { value: "DISCARDED", label: tStatus("discarded") },
+  ];
+
+  const SORT_OPTIONS = [
+    { value: "score", label: t("sortScore") },
+    { value: "status", label: t("sortStatus") },
+    { value: "margin", label: t("sortMargin") },
+    { value: "orders", label: t("sortOrders") },
+    { value: "createdAt", label: t("sortNewest") },
+  ];
 
   function applyParams(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -39,7 +42,7 @@ export function WinningProductsFilters() {
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <Select value={searchParams.get("status") ?? "all"} onValueChange={(v) => applyParams({ status: v === "all" ? undefined : v })}>
         <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder="Status" />
+          <SelectValue placeholder={t("allStatuses")} />
         </SelectTrigger>
         <SelectContent>
           {STATUS_OPTIONS.map((o) => (
@@ -51,7 +54,7 @@ export function WinningProductsFilters() {
       </Select>
 
       <div className="flex items-center gap-1.5">
-        <Label className="whitespace-nowrap text-xs text-muted-foreground">Min score</Label>
+        <Label className="whitespace-nowrap text-xs text-muted-foreground">{t("minScore")}</Label>
         <Input
           type="number"
           className="w-20"
@@ -61,7 +64,7 @@ export function WinningProductsFilters() {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <Label className="whitespace-nowrap text-xs text-muted-foreground">Min margin %</Label>
+        <Label className="whitespace-nowrap text-xs text-muted-foreground">{t("minMargin")}</Label>
         <Input
           type="number"
           className="w-20"
@@ -71,7 +74,7 @@ export function WinningProductsFilters() {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <Label className="whitespace-nowrap text-xs text-muted-foreground">Min orders</Label>
+        <Label className="whitespace-nowrap text-xs text-muted-foreground">{t("minOrders")}</Label>
         <Input
           type="number"
           className="w-20"
@@ -82,7 +85,7 @@ export function WinningProductsFilters() {
 
       <Select value={searchParams.get("sortBy") ?? "score"} onValueChange={(v) => applyParams({ sortBy: v })}>
         <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder="Sort by" />
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((o) => (

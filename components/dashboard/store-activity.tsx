@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Store as StoreIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,24 +16,26 @@ const statusVariant: Record<string, "outline" | "secondary" | "success" | "destr
   ERROR: "destructive",
 };
 
-export function StoreActivity({ stores }: { stores: Awaited<ReturnType<typeof getRecentStores>> }) {
+export async function StoreActivity({ stores }: { stores: Awaited<ReturnType<typeof getRecentStores>> }) {
+  const t = await getTranslations("dashboard.storeActivity");
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Store Activity</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/stores">View all</Link>
+          <Link href="/stores">{t("viewAll")}</Link>
         </Button>
       </CardHeader>
       <CardContent>
         {stores.length === 0 ? (
           <EmptyState
             icon={StoreIcon}
-            title="No stores yet"
-            description="Build your first AI-generated store from a product you've analyzed."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             action={
               <Button size="sm" className="mt-2" asChild>
-                <Link href="/store-builder">Build a store</Link>
+                <Link href="/store-builder">{t("buildStore")}</Link>
               </Button>
             }
           />
@@ -43,7 +46,7 @@ export function StoreActivity({ stores }: { stores: Awaited<ReturnType<typeof ge
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{store.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {store.product?.title ?? "No linked product"} · updated {relativeTime(store.updatedAt)}
+                    {store.product?.title ?? t("noLinkedProduct")} · {t("updated", { time: relativeTime(store.updatedAt) })}
                   </p>
                 </div>
                 <Badge variant={statusVariant[store.status] ?? "outline"}>{store.status}</Badge>

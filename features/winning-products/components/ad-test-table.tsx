@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { ProductAdTest } from "@prisma/client";
@@ -28,9 +29,10 @@ export function AdTestTable({
   productCost: { cost: number | null; shippingCost: number | null };
 }) {
   const router = useRouter();
+  const t = useTranslations("winningProducts.adTest");
 
   if (tests.length === 0) {
-    return <p className="text-sm text-muted-foreground">No ad tests yet. Add one to start validating this product with real numbers.</p>;
+    return <p className="text-sm text-muted-foreground">{t("noTestsYet")}</p>;
   }
 
   async function handleDelete(id: string) {
@@ -47,15 +49,15 @@ export function AdTestTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Test</TableHead>
-            <TableHead>Spend</TableHead>
-            <TableHead>CTR</TableHead>
-            <TableHead>CPC</TableHead>
-            <TableHead>Cost/ATC</TableHead>
-            <TableHead>CPA</TableHead>
-            <TableHead>ROAS</TableHead>
-            <TableHead>Net profit</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t("columnTest")}</TableHead>
+            <TableHead>{t("columnSpend")}</TableHead>
+            <TableHead>{t("columnCtr")}</TableHead>
+            <TableHead>{t("columnCpc")}</TableHead>
+            <TableHead>{t("columnCostAtc")}</TableHead>
+            <TableHead>{t("columnCpa")}</TableHead>
+            <TableHead>{t("columnRoas")}</TableHead>
+            <TableHead>{t("columnNetProfit")}</TableHead>
+            <TableHead className="text-right">{t("columnActions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

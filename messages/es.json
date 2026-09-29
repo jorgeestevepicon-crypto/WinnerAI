@@ -1,0 +1,221 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "productFinder": "Buscador de productos",
+    "winningProducts": "Productos ganadores",
+    "storeBuilder": "Creador de tiendas",
+    "stores": "Tiendas",
+    "orders": "Pedidos",
+    "adStudio": "Estudio de anuncios",
+    "shopify": "Shopify",
+    "analytics": "Analítica",
+    "billing": "Facturación",
+    "activity": "Actividad",
+    "admin": "Administración",
+    "settings": "Ajustes"
+  },
+  "dashboard": {
+    "welcomeBack": "Bienvenido de nuevo",
+    "subtitle": "Esto es lo que está pasando en tu espacio de trabajo.",
+    "stats": {
+      "productsDiscovered": "Productos descubiertos",
+      "productsSaved": "Productos guardados",
+      "storesCreated": "Tiendas creadas",
+      "adsGenerated": "Anuncios generados",
+      "shopify": "Shopify",
+      "connected": "Conectado",
+      "notConnected": "No conectado"
+    },
+    "productOpportunities": {
+      "title": "Oportunidades de producto",
+      "viewAll": "Ver todo",
+      "emptyTitle": "Aún no hay productos puntuados",
+      "emptyDescription": "Usa el Buscador de productos para descubrir y puntuar posibles productos ganadores.",
+      "findProducts": "Buscar productos",
+      "uncategorized": "Sin categoría"
+    },
+    "storeActivity": {
+      "title": "Actividad de tiendas",
+      "viewAll": "Ver todo",
+      "emptyTitle": "Aún no hay tiendas",
+      "emptyDescription": "Crea tu primera tienda generada con IA a partir de un producto que hayas analizado.",
+      "buildStore": "Crear una tienda",
+      "noLinkedProduct": "Sin producto vinculado",
+      "updated": "actualizado {time}"
+    },
+    "adPerformance": {
+      "title": "Rendimiento de anuncios",
+      "viewAll": "Ver todo",
+      "emptyTitle": "Aún no hay campañas de anuncios",
+      "emptyDescription": "Genera textos y creatividades de anuncios con el Estudio de anuncios con IA.",
+      "createAds": "Crear anuncios",
+      "creatives": "{count, plural, one {# creatividad} other {# creatividades}}",
+      "awaitingRealData": "Esperando datos reales de campaña. Conecta Meta, TikTok, Google o Pinterest para ver CTR, CPC y ROAS aquí."
+    },
+    "aiRecommendations": {
+      "title": "Recomendaciones de IA",
+      "emptyTitle": "Recibe recomendaciones basadas en datos",
+      "emptyDescription": "El Agente de Crecimiento con IA revisa tus productos, tiendas y campañas y sugiere próximos pasos — nunca actúa por su cuenta.",
+      "openGrowthAgent": "Abrir Agente de Crecimiento"
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Idioma",
+      "description": "Elige el idioma en el que WinnerAI se muestra en este navegador.",
+      "english": "English",
+      "spanish": "Español"
+    }
+  },
+  "winningProducts": {
+    "page": {
+      "title": "Productos ganadores",
+      "subtitle": "Valida candidatos reales de AliExpress antes de escalarlos a una tienda.",
+      "emptyTitle": "Aún no hay candidatos",
+      "emptyDescription": "Pulsa \"Buscar candidatos\" para descubrir productos reales de AliExpress, o añade uno manualmente.",
+      "columnProduct": "Producto",
+      "columnStatus": "Estado",
+      "columnScore": "Puntuación",
+      "columnPrice": "Precio",
+      "columnMargin": "Margen",
+      "columnOrders": "Pedidos"
+    },
+    "filters": {
+      "allStatuses": "Todos los estados",
+      "minScore": "Puntuación mín.",
+      "minMargin": "Margen mín. %",
+      "minOrders": "Pedidos mín.",
+      "sortScore": "Puntuación",
+      "sortStatus": "Estado",
+      "sortMargin": "Margen",
+      "sortOrders": "Pedidos",
+      "sortNewest": "Más reciente"
+    },
+    "status": {
+      "candidate": "Candidato",
+      "inTest": "En prueba",
+      "winner": "Ganador",
+      "discarded": "Descartado"
+    },
+    "discoverDialog": {
+      "trigger": "Buscar candidatos",
+      "title": "Buscar candidatos a producto ganador",
+      "connectFirst": "Conecta tu cuenta de AliExpress para buscar candidatos.",
+      "categoryLabel": "Categoría (opcional)",
+      "anyCategory": "Cualquier categoría",
+      "keywordsLabel": "Palabras clave (opcional)",
+      "keywordsPlaceholder": "ej. auriculares inalámbricos",
+      "connectAliExpress": "Conectar AliExpress",
+      "search": "Buscar",
+      "foundCount": "Se encontraron {count} candidatos nuevos",
+      "noneFound": "Ningún candidato nuevo coincidió con esta búsqueda."
+    },
+    "addManualDialog": {
+      "trigger": "Añadir manualmente",
+      "title": "Añade un producto que encontraste en otro sitio",
+      "connectFirst": "Conecta primero tu cuenta de AliExpress — esto trae datos reales del producto a partir de su URL o ID de AliExpress.",
+      "urlLabel": "URL de AliExpress o ID del producto",
+      "originLabel": "¿Dónde lo viste anunciado?",
+      "origins": {
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "metaAds": "Biblioteca de anuncios de Meta",
+        "other": "Otro"
+      },
+      "linkLabel": "Enlace al anuncio/vídeo (opcional)",
+      "addProduct": "Añadir producto",
+      "added": "Producto añadido"
+    },
+    "scoreFactors": {
+      "margin": "Margen",
+      "priceRangeFit": "Rango de precio ideal",
+      "demand": "Demanda",
+      "demandGrowth": "Crecimiento de demanda",
+      "providerQuality": "Calidad del proveedor",
+      "logistics": "Logística",
+      "wowEffect": "Efecto wow",
+      "physicalStores": "Disponibilidad en tiendas físicas",
+      "competitionLevel": "Nivel de competencia",
+      "googleTrends": "Google Trends"
+    },
+    "scoreBreakdown": {
+      "title": "Desglose de puntuación",
+      "notAvailable": "Aún no incluidos (sin datos reales disponibles): {factors}."
+    },
+    "manualSignalForm": {
+      "title": "Señales manuales",
+      "wowEffectLabel": "Efecto wow (1-5)",
+      "notSet": "Sin definir",
+      "competitionLevelLabel": "Nivel de competencia",
+      "low": "Bajo",
+      "medium": "Medio",
+      "high": "Alto",
+      "trendsLabel": "Dirección en Google Trends",
+      "rising": "Subiendo",
+      "stable": "Estable",
+      "falling": "Bajando",
+      "trendsHint": "Se rellena solo con la señal real de Google Trends de este producto cuando está disponible — corrígelo si sabes algo mejor.",
+      "foundInStores": "Se encuentra en tiendas físicas",
+      "notesLabel": "Notas",
+      "save": "Guardar"
+    },
+    "adTest": {
+      "sectionTitle": "Tests de anuncios",
+      "addAdTest": "Añadir test de anuncio",
+      "newAdTest": "Nuevo test de anuncio",
+      "nameLabel": "Nombre (opcional)",
+      "namePlaceholder": "Test 1",
+      "platformLabel": "Plataforma",
+      "platformPlaceholder": "TikTok, Meta...",
+      "addTest": "Añadir test",
+      "noTestsYet": "Aún no hay tests de anuncios. Añade uno para empezar a validar este producto con números reales.",
+      "columnTest": "Test",
+      "columnSpend": "Gasto",
+      "columnCtr": "CTR",
+      "columnCpc": "CPC",
+      "columnCostAtc": "Coste/carrito",
+      "columnCpa": "CPA",
+      "columnRoas": "ROAS",
+      "columnNetProfit": "Beneficio neto",
+      "columnActions": "Acciones"
+    },
+    "checklist": {
+      "sectionTitle": "Checklist de proveedor",
+      "sampleOrdered": "Muestra pedida",
+      "sampleReceived": "Muestra recibida",
+      "qualityOk": "Calidad OK",
+      "shippingDaysLabel": "Tiempo de envío real (días)",
+      "notesLabel": "Notas",
+      "readyToScale": "Listo para escalar",
+      "save": "Guardar checklist"
+    },
+    "detail": {
+      "backLink": "Volver a Productos ganadores",
+      "cost": "Coste {amount}",
+      "margin": "Margen {percent}",
+      "spottedOn": "Visto en {origin}",
+      "link": "enlace",
+      "viewOnAliExpress": "Ver en AliExpress",
+      "refresh": "Actualizar desde AliExpress"
+    },
+    "config": {
+      "settingsLinkTitle": "Ajustes de Productos ganadores",
+      "backLink": "Volver a Productos ganadores",
+      "pageTitle": "Ajustes de Productos ganadores",
+      "pageSubtitle": "Un solo sitio para ajustar los pesos y umbrales de puntuación usados en cada candidato.",
+      "cardTitle": "Configuración de puntuación",
+      "targetMarketTitle": "Mercado objetivo",
+      "priceCurrencyLabel": "Moneda de precio",
+      "targetCountryLabel": "País objetivo (ISO-2)",
+      "weightsTitle": "Pesos de la puntuación",
+      "weightsHint": "Los pesos suman {sum}. Un factor sin datos reales disponibles todavía reparte su peso entre los demás automáticamente.",
+      "thresholdsTitle": "Umbrales",
+      "marginTargetMultiplier": "Multiplicador de margen objetivo (precio / coste total)",
+      "idealPriceMin": "Precio de venta ideal — mínimo",
+      "idealPriceMax": "Precio de venta ideal — máximo",
+      "maxIdealWeight": "Peso ideal máximo (gramos)",
+      "minRoasForWinner": "ROAS mínimo para marcar como Ganador",
+      "save": "Guardar configuración"
+    }
+  }
+}

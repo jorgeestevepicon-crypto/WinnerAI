@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getNotificationPreferences } from "@/features/settings/server/actions";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 import { AppearanceForm } from "@/features/settings/components/appearance-form";
+import { LanguageForm } from "@/features/settings/components/language-form";
 import { NotificationsForm } from "@/features/settings/components/notifications-form";
 import { SecurityForm } from "@/features/settings/components/security-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +56,7 @@ export default async function SettingsPage() {
 
         <TabsContent value="appearance" className="space-y-4">
           <AppearanceForm />
+          <LanguageForm />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">

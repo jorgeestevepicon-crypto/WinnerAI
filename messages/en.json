@@ -1,0 +1,221 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "productFinder": "Product Finder",
+    "winningProducts": "Winning Products",
+    "storeBuilder": "Store Builder",
+    "stores": "Stores",
+    "orders": "Orders",
+    "adStudio": "Ad Studio",
+    "shopify": "Shopify",
+    "analytics": "Analytics",
+    "billing": "Billing",
+    "activity": "Activity",
+    "admin": "Admin",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back",
+    "subtitle": "Here's what's happening across your workspace.",
+    "stats": {
+      "productsDiscovered": "Products discovered",
+      "productsSaved": "Products saved",
+      "storesCreated": "Stores created",
+      "adsGenerated": "Ads generated",
+      "shopify": "Shopify",
+      "connected": "Connected",
+      "notConnected": "Not connected"
+    },
+    "productOpportunities": {
+      "title": "Product Opportunities",
+      "viewAll": "View all",
+      "emptyTitle": "No scored products yet",
+      "emptyDescription": "Run the Product Finder to discover and score potential winning products.",
+      "findProducts": "Find products",
+      "uncategorized": "Uncategorized"
+    },
+    "storeActivity": {
+      "title": "Store Activity",
+      "viewAll": "View all",
+      "emptyTitle": "No stores yet",
+      "emptyDescription": "Build your first AI-generated store from a product you've analyzed.",
+      "buildStore": "Build a store",
+      "noLinkedProduct": "No linked product",
+      "updated": "updated {time}"
+    },
+    "adPerformance": {
+      "title": "Ad Performance",
+      "viewAll": "View all",
+      "emptyTitle": "No ad campaigns yet",
+      "emptyDescription": "Generate ad copy and creatives with the AI Ad Studio.",
+      "createAds": "Create ads",
+      "creatives": "{count, plural, one {# creative} other {# creatives}}",
+      "awaitingRealData": "Awaiting real campaign data. Connect Meta, TikTok, Google or Pinterest to see CTR, CPC and ROAS here."
+    },
+    "aiRecommendations": {
+      "title": "AI Recommendations",
+      "emptyTitle": "Get data-backed recommendations",
+      "emptyDescription": "The AI Growth Agent reviews your products, stores and campaigns and suggests next steps — it never acts on its own.",
+      "openGrowthAgent": "Open Growth Agent"
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Choose the language WinnerAI displays in this browser.",
+      "english": "English",
+      "spanish": "Español"
+    }
+  },
+  "winningProducts": {
+    "page": {
+      "title": "Winning Products",
+      "subtitle": "Validate real AliExpress candidates before you scale them into a store.",
+      "emptyTitle": "No candidates yet",
+      "emptyDescription": "Click 'Find candidates' to discover real AliExpress products, or add one manually.",
+      "columnProduct": "Product",
+      "columnStatus": "Status",
+      "columnScore": "Score",
+      "columnPrice": "Price",
+      "columnMargin": "Margin",
+      "columnOrders": "Orders"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "minScore": "Min score",
+      "minMargin": "Min margin %",
+      "minOrders": "Min orders",
+      "sortScore": "Score",
+      "sortStatus": "Status",
+      "sortMargin": "Margin",
+      "sortOrders": "Orders",
+      "sortNewest": "Newest"
+    },
+    "status": {
+      "candidate": "Candidate",
+      "inTest": "In test",
+      "winner": "Winner",
+      "discarded": "Discarded"
+    },
+    "discoverDialog": {
+      "trigger": "Find candidates",
+      "title": "Find winning-product candidates",
+      "connectFirst": "Connect your AliExpress account to search for candidates.",
+      "categoryLabel": "Category (optional)",
+      "anyCategory": "Any category",
+      "keywordsLabel": "Search keywords (optional)",
+      "keywordsPlaceholder": "e.g. wireless earbuds",
+      "connectAliExpress": "Connect AliExpress",
+      "search": "Search",
+      "foundCount": "Found {count} new candidates",
+      "noneFound": "No new candidates matched this search."
+    },
+    "addManualDialog": {
+      "trigger": "Add manually",
+      "title": "Add a product you found elsewhere",
+      "connectFirst": "Connect your AliExpress account first — this pulls real product data by its AliExpress URL or item ID.",
+      "urlLabel": "AliExpress product URL or item ID",
+      "originLabel": "Where did you see it advertised?",
+      "origins": {
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "metaAds": "Meta Ad Library",
+        "other": "Other"
+      },
+      "linkLabel": "Link to the ad/video (optional)",
+      "addProduct": "Add product",
+      "added": "Product added"
+    },
+    "scoreFactors": {
+      "margin": "Margin",
+      "priceRangeFit": "Ideal price range",
+      "demand": "Demand",
+      "demandGrowth": "Demand growth",
+      "providerQuality": "Provider quality",
+      "logistics": "Logistics",
+      "wowEffect": "Wow effect",
+      "physicalStores": "Physical store availability",
+      "competitionLevel": "Competition level",
+      "googleTrends": "Google Trends"
+    },
+    "scoreBreakdown": {
+      "title": "Score breakdown",
+      "notAvailable": "Not yet included (no real data available): {factors}."
+    },
+    "manualSignalForm": {
+      "title": "Manual signals",
+      "wowEffectLabel": "Wow effect (1-5)",
+      "notSet": "Not set",
+      "competitionLevelLabel": "Competition level",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "trendsLabel": "Google Trends direction",
+      "rising": "Rising",
+      "stable": "Stable",
+      "falling": "Falling",
+      "trendsHint": "Pre-filled from this product's real Google Trends signal when available — override if you know better.",
+      "foundInStores": "Found in physical stores",
+      "notesLabel": "Notes",
+      "save": "Save"
+    },
+    "adTest": {
+      "sectionTitle": "Ad tests",
+      "addAdTest": "Add ad test",
+      "newAdTest": "New ad test",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "Test 1",
+      "platformLabel": "Platform",
+      "platformPlaceholder": "TikTok, Meta...",
+      "addTest": "Add test",
+      "noTestsYet": "No ad tests yet. Add one to start validating this product with real numbers.",
+      "columnTest": "Test",
+      "columnSpend": "Spend",
+      "columnCtr": "CTR",
+      "columnCpc": "CPC",
+      "columnCostAtc": "Cost/ATC",
+      "columnCpa": "CPA",
+      "columnRoas": "ROAS",
+      "columnNetProfit": "Net profit",
+      "columnActions": "Actions"
+    },
+    "checklist": {
+      "sectionTitle": "Supplier checklist",
+      "sampleOrdered": "Sample ordered",
+      "sampleReceived": "Sample received",
+      "qualityOk": "Quality OK",
+      "shippingDaysLabel": "Actual shipping time (days)",
+      "notesLabel": "Notes",
+      "readyToScale": "Ready to scale",
+      "save": "Save checklist"
+    },
+    "detail": {
+      "backLink": "Back to Winning Products",
+      "cost": "Cost {amount}",
+      "margin": "Margin {percent}",
+      "spottedOn": "Spotted on {origin}",
+      "link": "link",
+      "viewOnAliExpress": "View on AliExpress",
+      "refresh": "Refresh from AliExpress"
+    },
+    "config": {
+      "settingsLinkTitle": "Winning Products settings",
+      "backLink": "Back to Winning Products",
+      "pageTitle": "Winning Products settings",
+      "pageSubtitle": "One place to tune the scoring weights and thresholds used for every candidate.",
+      "cardTitle": "Scoring configuration",
+      "targetMarketTitle": "Target market",
+      "priceCurrencyLabel": "Price currency",
+      "targetCountryLabel": "Target country (ISO-2)",
+      "weightsTitle": "Score weights",
+      "weightsHint": "Weights sum to {sum}. A factor with no real data available yet has its weight redistributed among the others automatically.",
+      "thresholdsTitle": "Thresholds",
+      "marginTargetMultiplier": "Target margin multiplier (price / total cost)",
+      "idealPriceMin": "Ideal sale price — minimum",
+      "idealPriceMax": "Ideal sale price — maximum",
+      "maxIdealWeight": "Max ideal weight (grams)",
+      "minRoasForWinner": "Minimum ROAS to mark as Winner",
+      "save": "Save configuration"
+    }
+  }
+}

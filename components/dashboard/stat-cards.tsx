@@ -1,14 +1,17 @@
+import { getTranslations } from "next-intl/server";
 import { Search, Bookmark, Store, Megaphone, ShoppingBag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { getDashboardStats } from "@/lib/dashboard/queries";
 
-export function StatCards({ stats }: { stats: Awaited<ReturnType<typeof getDashboardStats>> }) {
+export async function StatCards({ stats }: { stats: Awaited<ReturnType<typeof getDashboardStats>> }) {
+  const t = await getTranslations("dashboard.stats");
+
   const items = [
-    { label: "Products discovered", value: stats.productsDiscovered, icon: Search },
-    { label: "Products saved", value: stats.productsSaved, icon: Bookmark },
-    { label: "Stores created", value: stats.storesCreated, icon: Store },
-    { label: "Ads generated", value: stats.adsGenerated, icon: Megaphone },
+    { label: t("productsDiscovered"), value: stats.productsDiscovered, icon: Search },
+    { label: t("productsSaved"), value: stats.productsSaved, icon: Bookmark },
+    { label: t("storesCreated"), value: stats.storesCreated, icon: Store },
+    { label: t("adsGenerated"), value: stats.adsGenerated, icon: Megaphone },
   ];
 
   return (
@@ -33,9 +36,9 @@ export function StatCards({ stats }: { stats: Awaited<ReturnType<typeof getDashb
           </div>
           <div>
             <Badge variant={stats.shopifyStatus === "CONNECTED" ? "success" : "outline"}>
-              {stats.shopifyStatus === "CONNECTED" ? "Connected" : "Not connected"}
+              {stats.shopifyStatus === "CONNECTED" ? t("connected") : t("notConnected")}
             </Badge>
-            <p className="mt-1 text-xs text-muted-foreground">Shopify</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("shopify")}</p>
           </div>
         </CardContent>
       </Card>

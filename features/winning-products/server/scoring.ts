@@ -95,19 +95,6 @@ function scoreGoogleTrends(manual: ProductManualSignal | null): number | undefin
   return TREND_SCORES[manual.googleTrendsManual];
 }
 
-const FACTOR_LABELS: Record<keyof DropshippingScoreBreakdown, string> = {
-  margin: "Margin",
-  priceRangeFit: "Ideal price range",
-  demand: "Demand",
-  demandGrowth: "Demand growth",
-  providerQuality: "Provider quality",
-  logistics: "Logistics",
-  wowEffect: "Wow effect",
-  physicalStores: "Physical store availability",
-  competitionLevel: "Competition level",
-  googleTrends: "Google Trends",
-};
-
 type WeightKey =
   | "weightMargin"
   | "weightPriceRangeFit"
@@ -174,7 +161,11 @@ export function computeDropshippingScore(
       ? Math.round(availableKeys.reduce((sum, key) => sum + raw[key]! * (config[WEIGHT_KEYS[key]] / availableWeight), 0))
       : 0;
 
-  const missingFactors = factorKeys.filter((key) => raw[key] === undefined).map((key) => FACTOR_LABELS[key]);
+  // Factor keys, not display labels — translated at render time
+  // (features/winning-products/components/score-breakdown.tsx) via the
+  // "winningProducts.scoreFactors" message namespace, so this stays
+  // locale-agnostic.
+  const missingFactors = factorKeys.filter((key) => raw[key] === undefined);
 
   return {
     score: clamp(score),

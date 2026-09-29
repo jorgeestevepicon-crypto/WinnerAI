@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/config/nav";
 
 export function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="flex flex-col gap-1">
@@ -25,7 +27,7 @@ export function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate
             )}
           >
             <item.icon className="h-4 w-4 shrink-0" />
-            {item.title}
+            {t(item.titleKey)}
           </Link>
         );
       })}

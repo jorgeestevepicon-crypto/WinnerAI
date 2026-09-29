@@ -1,9 +1,11 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
+import { LOCALE_COOKIE, isSupportedLocale } from "@/i18n/config";
 import {
   profileSchema,
   notificationPreferencesSchema,
@@ -47,6 +49,22 @@ export async function getNotificationPreferences() {
   const prefs = record?.preferences as { notifications?: unknown } | null;
   const parsed = notificationPreferencesSchema.safeParse(prefs?.notifications);
   return parsed.success ? parsed.data : defaultNotificationPreferences;
+}
+
+/**
+ * Per-browser, like the light/dark theme preference (next-themes) — a
+ * cookie rather than a DB column, so switching languages takes effect
+ * immediately on the next server render without touching the user's
+ * session/account data.
+ */
+export async function setLocale(locale: string) {
+  if (!isSupportedLocale(locale)) return { success: false as const, error: "Unsupported language" };
+
+  cookies().set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+  // Revalidating the root layout re-renders every page (including the
+  // <html lang> attribute and every translated string) with the new locale.
+  revalidatePath("/", "layout");
+  return { success: true as const };
 }
 
 export async function changePassword(input: unknown) {

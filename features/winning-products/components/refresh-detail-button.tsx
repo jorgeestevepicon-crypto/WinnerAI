@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { refreshAliExpressProductDetail } from "@/features/winning-products/serv
 
 export function RefreshDetailButton({ productId }: { productId: string }) {
   const router = useRouter();
+  const t = useTranslations("winningProducts.detail");
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -20,14 +22,14 @@ export function RefreshDetailButton({ productId }: { productId: string }) {
       toast.error(result.error);
       return;
     }
-    toast.success("Refreshed from AliExpress");
+    toast.success(t("refresh"));
     router.refresh();
   }
 
   return (
     <Button variant="outline" size="sm" onClick={handleClick} disabled={loading}>
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-      Refresh from AliExpress
+      {t("refresh")}
     </Button>
   );
 }

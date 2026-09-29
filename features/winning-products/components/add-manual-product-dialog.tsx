@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,20 +12,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addManualAliExpressProduct } from "@/features/winning-products/server/actions";
 
-const ORIGINS = [
-  { value: "TIKTOK", label: "TikTok" },
-  { value: "INSTAGRAM", label: "Instagram" },
-  { value: "META_ADS", label: "Meta Ad Library" },
-  { value: "OTHER", label: "Other" },
-] as const;
+const ORIGIN_VALUES = ["TIKTOK", "INSTAGRAM", "META_ADS", "OTHER"] as const;
 
 export function AddManualProductDialog({ aliexpressConnected }: { aliexpressConnected: boolean }) {
   const router = useRouter();
+  const t = useTranslations("winningProducts.addManualDialog");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [urlOrId, setUrlOrId] = useState("");
-  const [origin, setOrigin] = useState<(typeof ORIGINS)[number]["value"]>("TIKTOK");
+  const [origin, setOrigin] = useState<(typeof ORIGIN_VALUES)[number]>("TIKTOK");
   const [discoveryUrl, setDiscoveryUrl] = useState("");
+
+  const ORIGIN_LABELS: Record<(typeof ORIGIN_VALUES)[number], string> = {
+    TIKTOK: t("origins.tiktok"),
+    INSTAGRAM: t("origins.instagram"),
+    META_ADS: t("origins.metaAds"),
+    OTHER: t("origins.other"),
+  };
 
   async function handleSubmit() {
     setLoading(true);
@@ -39,7 +43,7 @@ export function AddManualProductDialog({ aliexpressConnected }: { aliexpressConn
       toast.error(result.error);
       return;
     }
-    toast.success("Product added");
+    toast.success(t("added"));
     setOpen(false);
     router.push(`/winning-products/${result.productId}`);
   }
@@ -49,38 +53,38 @@ export function AddManualProductDialog({ aliexpressConnected }: { aliexpressConn
       <DialogTrigger asChild>
         <Button variant="outline">
           <PlusCircle className="h-4 w-4" />
-          Add manually
+          {t("trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a product you found elsewhere</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         {!aliexpressConnected ? (
-          <p className="text-sm text-muted-foreground">Connect your AliExpress account first — this pulls real product data by its AliExpress URL or item ID.</p>
+          <p className="text-sm text-muted-foreground">{t("connectFirst")}</p>
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>AliExpress product URL or item ID</Label>
+              <Label>{t("urlLabel")}</Label>
               <Input value={urlOrId} onChange={(e) => setUrlOrId(e.target.value)} placeholder="https://www.aliexpress.com/item/... or 1005006123456789" />
             </div>
             <div className="space-y-1.5">
-              <Label>Where did you see it advertised?</Label>
-              <Select value={origin} onValueChange={(v) => setOrigin(v as (typeof ORIGINS)[number]["value"])}>
+              <Label>{t("originLabel")}</Label>
+              <Select value={origin} onValueChange={(v) => setOrigin(v as (typeof ORIGIN_VALUES)[number])}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ORIGINS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
+                  {ORIGIN_VALUES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {ORIGIN_LABELS[value]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Link to the ad/video (optional)</Label>
+              <Label>{t("linkLabel")}</Label>
               <Input value={discoveryUrl} onChange={(e) => setDiscoveryUrl(e.target.value)} placeholder="https://..." />
             </div>
           </div>
@@ -88,7 +92,7 @@ export function AddManualProductDialog({ aliexpressConnected }: { aliexpressConn
         <DialogFooter>
           <Button onClick={handleSubmit} disabled={loading || !aliexpressConnected || !urlOrId.trim()}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
-            Add product
+            {t("addProduct")}
           </Button>
         </DialogFooter>
       </DialogContent>

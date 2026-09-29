@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Settings } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ export default async function WinningProductsPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const user = await requireUser();
+  const t = await getTranslations("winningProducts.page");
+  const tConfig = await getTranslations("winningProducts.config");
 
   const flat = Object.fromEntries(Object.entries(searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const filters = winningProductFilterSchema.parse(flat);
@@ -31,11 +34,11 @@ export default async function WinningProductsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Winning Products</h1>
-          <p className="text-sm text-muted-foreground">Validate real AliExpress candidates before you scale them into a store.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" asChild title={tConfig("settingsLinkTitle")}>
             <Link href="/winning-products/settings">
               <Settings className="h-4 w-4" />
             </Link>

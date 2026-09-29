@@ -1,25 +1,28 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 
-export function AIRecommendations() {
+export async function AIRecommendations() {
+  const t = await getTranslations("dashboard.aiRecommendations");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> AI Recommendations
+          <Sparkles className="h-4 w-4 text-primary" /> {t("title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <EmptyState
           icon={Sparkles}
-          title="Get data-backed recommendations"
-          description="The AI Growth Agent reviews your products, stores and campaigns and suggests next steps — it never acts on its own."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             <Button size="sm" className="mt-2" asChild>
-              <Link href="/analytics">Open Growth Agent</Link>
+              <Link href="/analytics">{t("openGrowthAgent")}</Link>
             </Button>
           }
         />
