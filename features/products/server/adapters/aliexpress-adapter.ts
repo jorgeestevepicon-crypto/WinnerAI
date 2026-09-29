@@ -261,7 +261,7 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
 
     const currency = params.currency?.trim() || "USD";
 
-    const normalized = products
+    const validated = products
       .map((product): NormalizedProductInput | null => {
         const title = extractTitle(product);
         const cost = extractPrice(product);
@@ -302,16 +302,24 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
           metadata: { aliexpressProductId: product.itemId, recentOrders: volume, productRating: rating },
         };
       })
-      .filter((product): product is NormalizedProductInput => product !== null)
-      // Merged results come from several keyword variants plus the recommend
-      // feed, each already sorted individually — re-sort the combined set by
-      // the same real demand signal so the strongest sellers across all of
-      // them surface first, then cap to what was actually requested.
-      .sort((a, b) => (b.signals.demand ?? 0) - (a.signals.demand ?? 0))
-      .slice(0, params.limit ?? 20);
+      .filter((product): product is NormalizedProductInput => product !== null);
 
-    if (normalized.length < products.length) {
-      console.error(`${METHOD}: merged ${products.length} unique raw products across ${keywordVariants.length} keyword variant(s), but only ${normalized.length} had both a title and a usable price and were kept.`);
+    // Merged results come from several keyword variants plus the recommend
+    // feed, each already sorted individually — re-sort the combined set by
+    // the same real demand signal so the strongest sellers across all of
+    // them surface first, then cap to what was actually requested.
+    const normalized = [...validated].sort((a, b) => (b.signals.demand ?? 0) - (a.signals.demand ?? 0)).slice(0, params.limit ?? 20);
+
+    if (validated.length < products.length) {
+      // Not necessarily a problem — could be a real data-quality drop
+      // (missing title/price/rating), logged here for visibility.
+      console.error(`${METHOD}: merged ${products.length} unique raw products across ${keywordVariants.length} keyword variant(s), but only ${validated.length} had both a title and a usable price (or passed the rating filter) and were kept.`);
+    }
+    if (normalized.length < validated.length) {
+      // Purely a "you asked for fewer than we found" cap, not a data
+      // problem — logged at this lower severity distinction so it's never
+      // confused with the data-quality drop logged above.
+      console.info(`${METHOD}: ${validated.length} valid products found, capped to the requested limit of ${params.limit ?? 20}.`);
     }
 
     if (products.length > 0 && normalized.length === 0) {
