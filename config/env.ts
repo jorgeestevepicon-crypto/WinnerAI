@@ -65,6 +65,17 @@ export const env = {
     appKey: process.env.ALIEXPRESS_APP_KEY,
     appSecret: process.env.ALIEXPRESS_APP_SECRET,
   },
+
+  // No credentials needed — this hits Google's public (but unofficial)
+  // Trends endpoints. The flag exists only so it can be switched off if
+  // Google starts rate-limiting or blocking this deployment.
+  trends: {
+    googleTrendsEnabled: bool(process.env.GOOGLE_TRENDS_ENABLED, true),
+  },
+
+  metaAds: {
+    accessToken: process.env.META_ADS_ACCESS_TOKEN,
+  },
 } as const;
 
 export const integrations = {
@@ -98,5 +109,11 @@ export const integrations = {
   },
   get aliexpressConfigured() {
     return !!env.aliexpress.appKey && !!env.aliexpress.appSecret;
+  },
+  get googleTrendsConfigured() {
+    return env.trends.googleTrendsEnabled;
+  },
+  get metaAdsConfigured() {
+    return !!env.metaAds.accessToken;
   },
 };

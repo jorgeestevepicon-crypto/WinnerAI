@@ -7,6 +7,9 @@ import { requireUser } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { runAIJob } from "@/lib/ai/job-runner";
 import { generateProductAnalysis } from "@/lib/ai/services/product-analysis";
+import { integrations } from "@/config/env";
+import { getGoogleTrendsSignal } from "@/lib/trends/google-trends";
+import { getMetaAdsSignal } from "@/lib/meta-ads/client";
 import { discoverySchema } from "@/features/products/schemas";
 import { getProductSourceAdapter } from "@/features/products/server/adapters";
 import { toProductCreateInput, SOURCE_MAP } from "@/features/products/server/normalize";
@@ -42,6 +45,37 @@ export async function runProductDiscovery(input: unknown) {
 
   if (results.length === 0) {
     return { success: true as const, count: 0 };
+  }
+
+  // Cross-reference real trend/ad-market data for sources whose own API
+  // can only supply a subset of the Winning Score's factors (AliExpress,
+  // notably, only knows real order volume). One combined lookup per
+  // search — keyed by the category/query the user actually typed, since a
+  // single product title is too specific for trend or ad-library matching
+  // — applied to every result from this run. Demo mode already fabricates
+  // every factor on purpose, so it's excluded here. Never overwrites a
+  // signal the adapter itself already provided from a real source.
+  if (adapter.id !== "demo" && (integrations.googleTrendsConfigured || integrations.metaAdsConfigured)) {
+    const signalKeyword = (parsed.data.category || parsed.data.query || "").trim();
+    if (signalKeyword) {
+      const [trendsSignal, metaSignal] = await Promise.all([
+        integrations.googleTrendsConfigured ? getGoogleTrendsSignal(signalKeyword) : Promise.resolve(null),
+        integrations.metaAdsConfigured ? getMetaAdsSignal(signalKeyword) : Promise.resolve(null),
+      ]);
+
+      if (trendsSignal || metaSignal) {
+        results = results.map((item) => ({
+          ...item,
+          signals: {
+            ...item.signals,
+            trend: item.signals.trend ?? trendsSignal?.trend,
+            growth: item.signals.growth ?? trendsSignal?.growth,
+            competition: item.signals.competition ?? metaSignal?.competition,
+            saturation: item.signals.saturation ?? metaSignal?.saturation,
+          },
+        }));
+      }
+    }
   }
 
   // Re-running the same (or an overlapping) search — including just
