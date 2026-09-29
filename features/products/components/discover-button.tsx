@@ -49,7 +49,16 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
     }
     toast.success(`Found ${result.count} products`);
     setOpen(false);
-    startTransition(() => router.refresh());
+    // Jump the results view to match what was just searched — otherwise the
+    // page keeps whatever filter it already had and the new products just
+    // blend in with everything else you've ever found.
+    startTransition(() => {
+      if (category.trim()) {
+        router.push(`/products?category=${encodeURIComponent(category.trim())}`);
+      } else {
+        router.refresh();
+      }
+    });
   }
 
   async function handleConnectAliExpress() {
