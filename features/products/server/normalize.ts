@@ -2,7 +2,7 @@ import type { Prisma, ProductSource } from "@prisma/client";
 import type { NormalizedProductInput, ProductSourceId } from "@/features/products/types";
 import { computeWinningScore } from "@/features/products/server/scoring";
 
-const SOURCE_MAP: Record<ProductSourceId, ProductSource> = {
+export const SOURCE_MAP: Record<ProductSourceId, ProductSource> = {
   demo: "DEMO",
   aliexpress: "ALIEXPRESS",
   amazon: "AMAZON",

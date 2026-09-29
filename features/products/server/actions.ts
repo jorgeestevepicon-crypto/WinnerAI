@@ -9,7 +9,7 @@ import { runAIJob } from "@/lib/ai/job-runner";
 import { generateProductAnalysis } from "@/lib/ai/services/product-analysis";
 import { discoverySchema } from "@/features/products/schemas";
 import { getProductSourceAdapter } from "@/features/products/server/adapters";
-import { toProductCreateInput } from "@/features/products/server/normalize";
+import { toProductCreateInput, SOURCE_MAP } from "@/features/products/server/normalize";
 import type { ProductSourceId } from "@/features/products/types";
 
 export async function runProductDiscovery(input: unknown) {
@@ -44,8 +44,23 @@ export async function runProductDiscovery(input: unknown) {
     return { success: true as const, count: 0 };
   }
 
+  // Re-running the same (or an overlapping) search — including just
+  // re-browsing the fixed demo catalog — used to insert every result again
+  // as a brand-new row every time. Skip anything the user already has under
+  // this source with the same title instead of piling up duplicates.
+  const existing = await prisma.product.findMany({
+    where: { userId: user.id, source: SOURCE_MAP[adapter.id as ProductSourceId], deletedAt: null },
+    select: { title: true },
+  });
+  const existingTitles = new Set(existing.map((p) => p.title));
+  const newResults = results.filter((item) => !existingTitles.has(item.title));
+
+  if (newResults.length === 0) {
+    return { success: true as const, count: 0 };
+  }
+
   await prisma.$transaction(
-    results.map((item) =>
+    newResults.map((item) =>
       prisma.product.create({
         data: { ...toProductCreateInput(item, adapter.id as ProductSourceId), userId: user.id },
       })
@@ -53,7 +68,7 @@ export async function runProductDiscovery(input: unknown) {
   );
 
   revalidatePath("/products");
-  return { success: true as const, count: results.length };
+  return { success: true as const, count: newResults.length };
 }
 
 export async function toggleSaveProduct(productId: string) {
