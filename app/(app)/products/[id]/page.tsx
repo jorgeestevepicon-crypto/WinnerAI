@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Package, Sparkles, Store, Megaphone } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { getProductById } from "@/features/products/server/queries";
@@ -38,8 +39,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
         <div className="space-y-4 lg:col-span-2">
           <Card>
             <CardContent className="flex gap-4 p-6">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Package className="h-8 w-8 text-muted-foreground" />
+              <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                {product.images[0] ? (
+                  <Image src={product.images[0]} alt="" fill className="object-cover" unoptimized />
+                ) : (
+                  <Package className="h-8 w-8 text-muted-foreground" />
+                )}
               </div>
               <div className="flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-3">

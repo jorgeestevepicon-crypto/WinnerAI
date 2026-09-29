@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { Product } from "@prisma/client";
-import { LayoutGrid, List, Search } from "lucide-react";
+import { LayoutGrid, List, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,9 +43,13 @@ export function ProductResults({ products }: { products: Product[] }) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (
             <Link key={product.id} href={`/products/${product.id}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
-                <div className="flex h-32 items-center justify-center rounded-t-xl bg-muted text-xs text-muted-foreground">
-                  {product.category ?? "Product"}
+              <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+                <div className="relative flex h-32 items-center justify-center bg-muted text-xs text-muted-foreground">
+                  {product.images[0] ? (
+                    <Image src={product.images[0]} alt="" fill className="object-cover" unoptimized />
+                  ) : (
+                    product.category ?? "Product"
+                  )}
                 </div>
                 <CardContent className="space-y-2 p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -78,7 +83,14 @@ export function ProductResults({ products }: { products: Product[] }) {
               {products.map((product) => (
                 <TableRow key={product.id} className={cn(product.saved && "bg-accent/30")}>
                   <TableCell>
-                    <Link href={`/products/${product.id}`} className="font-medium hover:underline">
+                    <Link href={`/products/${product.id}`} className="flex items-center gap-2 font-medium hover:underline">
+                      <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded bg-muted">
+                        {product.images[0] ? (
+                          <Image src={product.images[0]} alt="" fill className="object-cover" unoptimized />
+                        ) : (
+                          <Package className="absolute inset-0 m-auto h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
                       {product.title}
                     </Link>
                   </TableCell>
