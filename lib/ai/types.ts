@@ -56,6 +56,8 @@ export interface AIImageParams {
   quality?: "low" | "medium" | "high";
   /** Isolate the subject on a transparent background — for marks/logos, not photo scenes. Ignored by providers that don't support it. */
   transparentBackground?: boolean;
+  /** A real photo of the actual product to use as the basis for the generated image (image-to-image editing), instead of generating a scene from text alone. Ignored by providers that don't support editing. */
+  referenceImageUrl?: string;
 }
 
 export interface AIImageResult {

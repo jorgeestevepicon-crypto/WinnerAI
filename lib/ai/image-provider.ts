@@ -66,6 +66,55 @@ const demoImageProvider: AIImageProvider = {
  * again by the time you read this, check https://platform.openai.com/docs
  * and adjust the model name / response parsing below.
  */
+function parseImageResponse(data: { data?: Array<{ url?: string; b64_json?: string }> }): AIImageResult {
+  const first = data.data?.[0];
+  if (typeof first?.url === "string") {
+    return { url: first.url, provider: "openai" };
+  }
+  if (typeof first?.b64_json === "string") {
+    return { url: `data:image/png;base64,${first.b64_json}`, provider: "openai" };
+  }
+  throw new AIProviderError("OpenAI image response did not include image data.", "openai");
+}
+
+/**
+ * Image-to-image editing (via OpenAI's /v1/images/edits) — used when we have
+ * a real photo of the actual product (e.g. from AliExpress) and want a
+ * professional studio version of THAT product, not a from-scratch scene
+ * that merely resembles it. Untested against a live account: the edits
+ * endpoint's accepted input formats/size limits for gpt-image-1 haven't
+ * been verified here — if it rejects the downloaded photo's format, that's
+ * the first thing to check.
+ */
+async function editImage(params: AIImageParams, size: string): Promise<AIImageResult> {
+  const sourceResponse = await fetch(params.referenceImageUrl!);
+  if (!sourceResponse.ok) {
+    throw new AIProviderError(`Could not download the reference image (${sourceResponse.status}) to edit it.`, "openai");
+  }
+  const sourceBlob = await sourceResponse.blob();
+
+  const form = new FormData();
+  form.set("model", "gpt-image-1");
+  form.set("prompt", params.prompt);
+  form.set("size", size);
+  form.set("n", "1");
+  if (params.quality) form.set("quality", params.quality);
+  form.set("image", sourceBlob, "reference.png");
+
+  const response = await fetch("https://api.openai.com/v1/images/edits", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.ai.imageApiKey}` },
+    body: form,
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new AIProviderError(`OpenAI image edit request failed (${response.status}): ${text}`, "openai");
+  }
+
+  return parseImageResponse(await response.json());
+}
+
 const openAIImageProvider: AIImageProvider = {
   id: "openai",
   async generateImage(params: AIImageParams): Promise<AIImageResult> {
@@ -74,6 +123,10 @@ const openAIImageProvider: AIImageProvider = {
     }
 
     const size = params.width === params.height ? "1024x1024" : params.width > params.height ? "1536x1024" : "1024x1536";
+
+    if (params.referenceImageUrl) {
+      return editImage(params, size);
+    }
 
     const body: Record<string, unknown> = { model: "gpt-image-1", prompt: params.prompt, size, n: 1 };
     if (params.quality) body.quality = params.quality;
@@ -93,15 +146,7 @@ const openAIImageProvider: AIImageProvider = {
       throw new AIProviderError(`OpenAI image request failed (${response.status}): ${text}`, "openai");
     }
 
-    const data = await response.json();
-    const first = data.data?.[0];
-    if (typeof first?.url === "string") {
-      return { url: first.url, provider: "openai" };
-    }
-    if (typeof first?.b64_json === "string") {
-      return { url: `data:image/png;base64,${first.b64_json}`, provider: "openai" };
-    }
-    throw new AIProviderError("OpenAI image response did not include image data.", "openai");
+    return parseImageResponse(await response.json());
   },
 };
 

@@ -84,7 +84,13 @@ export async function generateStore(input: unknown) {
       const [heroImageUrl, productImageUrl] = await Promise.all([
         generateHeroImage({ productTitle: product.title, category: product.category, style: parsed.data.style, tone: parsed.data.tone }, { forceDemo }),
         generateProductImage(
-          { productTitle: product.title, productDescription: product.description, category: product.category, style: parsed.data.style },
+          {
+            productTitle: product.title,
+            productDescription: product.description,
+            category: product.category,
+            style: parsed.data.style,
+            referenceImageUrl: product.images[0],
+          },
           { forceDemo }
         ),
       ]);

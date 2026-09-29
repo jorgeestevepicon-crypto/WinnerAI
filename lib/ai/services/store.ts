@@ -194,16 +194,25 @@ export async function generateHeroImage(
 }
 
 export async function generateProductImage(
-  input: Pick<StoreContentInput, "productTitle" | "productDescription" | "category" | "style">,
+  input: Pick<StoreContentInput, "productTitle" | "productDescription" | "category" | "style"> & { referenceImageUrl?: string },
   options?: { forceDemo?: boolean }
 ): Promise<string | undefined> {
   try {
     const imageProvider = getAIImageProvider(options);
+    // When we have a real photo of the actual product (e.g. sourced from
+    // AliExpress), edit that photo into a professional studio shot instead
+    // of generating an unrelated scene from text alone — the store should
+    // show the real product being sold, not a close-but-different one.
+    const prompt = input.referenceImageUrl
+      ? `Turn this product photo into a professional e-commerce studio shot: clean seamless white or light-gray background, soft even studio lighting, sharp focus, no props, no text, no watermarks. Keep the exact same product — do not change its shape, color or design. Visual style: ${input.style}.`
+      : `Studio product photo of ${input.productTitle}. ${input.productDescription ?? ""} Category: ${input.category ?? "general product"}. Visual style: ${input.style}. Clean background, no text, no watermarks.`;
+
     const result = await imageProvider.generateImage({
-      prompt: `Studio product photo of ${input.productTitle}. ${input.productDescription ?? ""} Category: ${input.category ?? "general product"}. Visual style: ${input.style}. Clean background, no text, no watermarks.`,
+      prompt,
       width: 800,
       height: 800,
       label: input.productTitle,
+      referenceImageUrl: input.referenceImageUrl,
     });
     return await persistRemoteAsset(result.url, "stores");
   } catch (error) {
