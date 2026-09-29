@@ -3,6 +3,7 @@ import { env } from "@/config/env";
 import { signParams, timestampGMT8, callAliExpress } from "@/lib/aliexpress/sign";
 import { getValidAccessToken } from "@/lib/aliexpress/connection";
 import { CATEGORY_SEARCH_TERMS } from "@/features/products/categories";
+import { generateProductSearchTerms } from "@/lib/ai/services/search-terms";
 import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter } from "@/features/products/types";
 
 /**
@@ -108,6 +109,84 @@ function extractPrice(p: DsProduct): number {
   return Number(p.targetSalePrice ?? 0);
 }
 
+/** Best-effort attempt at AliExpress's account-level recommended/best-selling feed, as a stronger "worth dropshipping" signal than pure keyword-search relevance. Unverified method name/params for this account — never throws; on any error it logs the raw response for later debugging and simply contributes zero extra products, so keyword search keeps working either way. */
+const RECOMMEND_FEED_METHOD = "aliexpress.ds.recommend.feed.get";
+
+async function fetchRecommendFeed(accessToken: string, params: ProductSearchParams): Promise<DsProduct[]> {
+  try {
+    const systemParams: Record<string, string> = {
+      app_key: env.aliexpress.appKey!,
+      method: RECOMMEND_FEED_METHOD,
+      timestamp: timestampGMT8(),
+      sign_method: "md5",
+      format: "json",
+      v: "2.0",
+      session: accessToken,
+      feed_name: "general",
+      page_no: "1",
+      page_size: String(Math.min(params.limit ?? 20, 50)),
+      target_currency: "USD",
+      target_language: "EN",
+      country_code: params.country?.trim() || "US",
+      local: "en_US",
+    };
+    systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
+
+    const data = await callAliExpress(systemParams);
+    const errorResponse = (data as Record<string, unknown>)?.error_response;
+    if (errorResponse) {
+      console.error(`${RECOMMEND_FEED_METHOD} unavailable on this account — falling back to keyword search only. Error:`, JSON.stringify(errorResponse));
+      return [];
+    }
+    return extractProducts(data);
+  } catch (error) {
+    console.error(`${RECOMMEND_FEED_METHOD} call failed — falling back to keyword search only.`, error);
+    return [];
+  }
+}
+
+async function searchByKeyword(accessToken: string, keywords: string, params: ProductSearchParams): Promise<DsProduct[]> {
+  const systemParams: Record<string, string> = {
+    app_key: env.aliexpress.appKey!,
+    method: METHOD,
+    timestamp: timestampGMT8(),
+    sign_method: "md5",
+    format: "json",
+    v: "2.0",
+    session: accessToken,
+    keyWord: keywords,
+    pageSize: String(Math.min(params.limit ?? 20, 50)),
+    pageIndex: "1",
+    targetCurrency: "USD",
+    currency: "USD",
+    targetLanguage: "EN",
+    local: "en_US",
+    countryCode: params.country?.trim() || "US",
+    // Surfaces the best-selling matches first — a much stronger "is this
+    // actually worth dropshipping" signal than raw keyword relevance,
+    // especially since the API seems to cap results per page regardless
+    // of pageSize (only the top handful matter most). Unverified field
+    // name/value — if this errors, check the sort options this account's
+    // "Documentation" tab lists for aliexpress.ds.text.search.
+    sort: "LAST_VOLUME_DESC",
+  };
+  systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
+
+  const data = await callAliExpress(systemParams);
+  const errorResponse = (data as Record<string, unknown>)?.error_response;
+  if (errorResponse) {
+    throw new Error(`AliExpress ${METHOD} returned an error for "${keywords}": ${JSON.stringify(errorResponse)}`);
+  }
+
+  const products = extractProducts(data);
+  if (products.length === 0) {
+    // If AliExpress changes this response's envelope shape again, this
+    // logs the raw body so extractProducts can be updated to match.
+    console.error(`${METHOD} returned no products for "${keywords}" via known response paths. Raw response:`, JSON.stringify(data).slice(0, 4000));
+  }
+  return products;
+}
+
 export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
   id: "aliexpress",
   label: "AliExpress",
@@ -131,47 +210,53 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
     // categories into an actual product-ish search phrase; the category
     // itself is still what gets saved/filtered on below.
     const categorySearchTerm = category && category in CATEGORY_SEARCH_TERMS ? CATEGORY_SEARCH_TERMS[category as keyof typeof CATEGORY_SEARCH_TERMS] : category;
-    const keywords = [categorySearchTerm, query].filter(Boolean).join(" ");
-    if (!keywords) return [];
 
-    const systemParams: Record<string, string> = {
-      app_key: env.aliexpress.appKey!,
-      method: METHOD,
-      timestamp: timestampGMT8(),
-      sign_method: "md5",
-      format: "json",
-      v: "2.0",
-      session: accessToken,
-      keyWord: keywords,
-      pageSize: String(Math.min(params.limit ?? 20, 50)),
-      pageIndex: "1",
-      targetCurrency: "USD",
-      currency: "USD",
-      targetLanguage: "EN",
-      local: "en_US",
-      countryCode: params.country?.trim() || "US",
-      // Surfaces the best-selling matches first — a much stronger "is this
-      // actually worth dropshipping" signal than raw keyword relevance,
-      // especially since the API seems to cap results per page regardless
-      // of pageSize (only the top handful matter most). Unverified field
-      // name/value — if this errors, check the sort options this account's
-      // "Documentation" tab lists for aliexpress.ds.text.search.
-      sort: "LAST_VOLUME_DESC",
-    };
-    systemParams.sign = signParams(systemParams, env.aliexpress.appSecret!);
-
-    const data = await callAliExpress(systemParams);
-    const errorResponse = (data as Record<string, unknown>)?.error_response;
-    if (errorResponse) {
-      throw new Error(`AliExpress ${METHOD} returned an error: ${JSON.stringify(errorResponse)}`);
+    let keywordVariants: string[];
+    if (categorySearchTerm) {
+      // A single fixed phrase per category only ever surfaces one narrow
+      // slice of AliExpress's catalog. Ask the AI provider for several
+      // diverse, realistic product-title phrases for this category instead,
+      // and search all of them — real winning-product candidates come from
+      // covering more of the catalog, not from one lucky keyword.
+      const diverseTerms = await generateProductSearchTerms(category!, categorySearchTerm);
+      keywordVariants = diverseTerms.map((term) => [term, query].filter(Boolean).join(" "));
+    } else if (query) {
+      keywordVariants = [query];
+    } else {
+      return [];
     }
 
-    const products = extractProducts(data);
-    if (products.length === 0) {
-      // If AliExpress changes this response's envelope shape again, this
-      // logs the raw body so extractProducts can be updated to match.
-      console.error(`${METHOD} returned no products via known response paths. Raw response:`, JSON.stringify(data).slice(0, 4000));
+    const settled = await Promise.allSettled([
+      ...keywordVariants.map((kw) => searchByKeyword(accessToken, kw, params)),
+      // Only worth trying alongside a category search — for a bare keyword
+      // query the account-level feed has no reason to relate to it.
+      category ? fetchRecommendFeed(accessToken, params) : Promise.resolve([]),
+    ]);
+
+    const allProducts: DsProduct[] = [];
+    let firstError: Error | null = null;
+    for (const result of settled) {
+      if (result.status === "fulfilled") {
+        allProducts.push(...result.value);
+      } else if (!firstError) {
+        firstError = result.reason instanceof Error ? result.reason : new Error(String(result.reason));
+      }
     }
+
+    if (allProducts.length === 0) {
+      if (firstError) throw firstError;
+      return [];
+    }
+
+    // Multiple keyword variants (and the recommend feed) commonly return the
+    // same real item more than once — dedupe before scoring/normalizing.
+    const seenIds = new Set<string>();
+    const products = allProducts.filter((product) => {
+      const key = String(product.itemId ?? product.title ?? "");
+      if (!key || seenIds.has(key)) return false;
+      seenIds.add(key);
+      return true;
+    });
 
     const normalized = products
       .map((product): NormalizedProductInput | null => {
@@ -210,14 +295,20 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
           metadata: { aliexpressProductId: product.itemId, recentOrders: volume },
         };
       })
-      .filter((product): product is NormalizedProductInput => product !== null);
+      .filter((product): product is NormalizedProductInput => product !== null)
+      // Merged results come from several keyword variants plus the recommend
+      // feed, each already sorted individually — re-sort the combined set by
+      // the same real demand signal so the strongest sellers across all of
+      // them surface first, then cap to what was actually requested.
+      .sort((a, b) => (b.signals.demand ?? 0) - (a.signals.demand ?? 0))
+      .slice(0, params.limit ?? 20);
 
     if (normalized.length < products.length) {
-      console.error(`${METHOD}: AliExpress returned ${products.length} raw products for "${keywords}", but only ${normalized.length} had both a title and a usable price and were kept.`);
+      console.error(`${METHOD}: merged ${products.length} unique raw products across ${keywordVariants.length} keyword variant(s), but only ${normalized.length} had both a title and a usable price and were kept.`);
     }
 
     if (products.length > 0 && normalized.length === 0) {
-      console.error(`${METHOD} found raw products but all were dropped (missing title/price fields) — check the field names in the "found N raw products" log above against DsProduct's field names.`);
+      console.error(`${METHOD} found raw products but all were dropped (missing title/price fields) — check the field names against DsProduct's field names.`);
     }
 
     return normalized;
