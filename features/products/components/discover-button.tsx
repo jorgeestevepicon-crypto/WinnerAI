@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { runProductDiscovery } from "@/features/products/server/actions";
 import { getAliExpressAuthUrl } from "@/features/aliexpress/server/actions";
+import { COMMON_PRODUCT_CATEGORIES } from "@/features/products/categories";
 
 export interface DiscoverableSource {
   id: string;
@@ -102,11 +103,18 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
           </div>
           <div className="space-y-1.5">
             <Label>Category {needsKeyword && "(optional if you enter keywords below)"}</Label>
-            <Input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="e.g. Technology, Beauty, Home"
-            />
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any category" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMMON_PRODUCT_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {needsKeyword && category.trim() && (
               <p className="text-xs text-muted-foreground">
                 Saved products from this search will be tagged with the &quot;{category.trim()}&quot; category, so you can filter by it afterwards.
