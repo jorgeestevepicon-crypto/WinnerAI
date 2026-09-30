@@ -14,8 +14,16 @@ import { discoverWinningCandidates } from "@/features/winning-products/server/ac
 import { getAliExpressAuthUrl } from "@/features/aliexpress/server/actions";
 import { COMMON_PRODUCT_CATEGORIES } from "@/features/products/categories";
 
-export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressConnected: boolean }) {
+export function DiscoverCandidatesButton({
+  aliexpressConnected,
+  aliexpressCategories = [],
+}: {
+  aliexpressConnected: boolean;
+  /** AliExpress's own real category tree (names only) — replaces the curated fallback list once connected. */
+  aliexpressCategories?: string[];
+}) {
   const router = useRouter();
+  const categoryOptions = aliexpressCategories.length > 0 ? aliexpressCategories : COMMON_PRODUCT_CATEGORIES;
   const t = useTranslations("winningProducts.discoverDialog");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,7 +85,7 @@ export function DiscoverCandidatesButton({ aliexpressConnected }: { aliexpressCo
                   <SelectValue placeholder={t("anyCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {COMMON_PRODUCT_CATEGORIES.map((c) => (
+                  {categoryOptions.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>

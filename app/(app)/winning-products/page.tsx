@@ -10,6 +10,8 @@ import { WinningProductsTable } from "@/features/winning-products/components/win
 import { DiscoverCandidatesButton } from "@/features/winning-products/components/discover-candidates-button";
 import { AddManualProductDialog } from "@/features/winning-products/components/add-manual-product-dialog";
 import { getAliExpressConnectionStatus } from "@/features/aliexpress/server/actions";
+import { getValidAccessToken } from "@/lib/aliexpress/connection";
+import { getCachedAliExpressCategories } from "@/features/products/server/aliexpress-categories";
 
 export const metadata = { title: "Winning Products" };
 
@@ -30,6 +32,15 @@ export default async function WinningProductsPage({
     getAliExpressConnectionStatus(),
   ]);
 
+  const aliexpressCategoryNames = isAliExpressConnected
+    ? await (async () => {
+        const token = await getValidAccessToken(user.id);
+        if (!token) return [];
+        const categories = await getCachedAliExpressCategories(token);
+        return categories.map((c) => c.name);
+      })()
+    : [];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -44,7 +55,7 @@ export default async function WinningProductsPage({
             </Link>
           </Button>
           <AddManualProductDialog aliexpressConnected={isAliExpressConnected} />
-          <DiscoverCandidatesButton aliexpressConnected={isAliExpressConnected} />
+          <DiscoverCandidatesButton aliexpressConnected={isAliExpressConnected} aliexpressCategories={aliexpressCategoryNames} />
         </div>
       </div>
 

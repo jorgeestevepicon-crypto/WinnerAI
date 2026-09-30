@@ -7,6 +7,8 @@ import { ProductResults } from "@/features/products/components/product-results";
 import { DiscoverButton } from "@/features/products/components/discover-button";
 import { productSourceAdapters } from "@/features/products/server/adapters";
 import { getAliExpressConnectionStatus } from "@/features/aliexpress/server/actions";
+import { getValidAccessToken } from "@/lib/aliexpress/connection";
+import { getCachedAliExpressCategories } from "@/features/products/server/aliexpress-categories";
 
 export const metadata = { title: "Product Finder" };
 
@@ -36,6 +38,19 @@ export default async function ProductsPage({
     getAliExpressConnectionStatus(),
   ]);
 
+  // AliExpress's own real category tree, when available, replaces the
+  // curated fallback list for this source — fetched only when connected,
+  // and never blocks the page if the (unverified-until-tested)
+  // aliexpress.ds.category.get endpoint errors or is slow.
+  const aliexpressCategoryNames = isAliExpressConnected
+    ? await (async () => {
+        const token = await getValidAccessToken(user.id);
+        if (!token) return [];
+        const categories = await getCachedAliExpressCategories(token);
+        return categories.map((c) => c.name);
+      })()
+    : [];
+
   const sources = productSourceAdapters.map((a) => ({
     id: a.id,
     label: a.label,
@@ -50,7 +65,7 @@ export default async function ProductsPage({
           <h1 className="text-2xl font-semibold tracking-tight">Product Finder</h1>
           <p className="text-sm text-muted-foreground">Discover and score potentially winning products.</p>
         </div>
-        <DiscoverButton sources={sources} aliexpressConnected={isAliExpressConnected} />
+        <DiscoverButton sources={sources} aliexpressConnected={isAliExpressConnected} aliexpressCategories={aliexpressCategoryNames} />
       </div>
 
       {aliexpressConnected && (
@@ -65,7 +80,13 @@ export default async function ProductsPage({
         </div>
       )}
 
-      <ProductFilters categories={categories} countries={countries} sources={sources} aliexpressConnected={isAliExpressConnected} />
+      <ProductFilters
+        categories={categories}
+        countries={countries}
+        sources={sources}
+        aliexpressConnected={isAliExpressConnected}
+        aliexpressCategories={aliexpressCategoryNames}
+      />
 
       <ProductResults products={products} />
     </div>

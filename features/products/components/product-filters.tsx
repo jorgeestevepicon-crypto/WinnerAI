@@ -36,11 +36,14 @@ export function ProductFilters({
   countries,
   sources,
   aliexpressConnected,
+  aliexpressCategories = [],
 }: {
   categories: string[];
   countries: string[];
   sources: DiscoverableSource[];
   aliexpressConnected: boolean;
+  /** AliExpress's own real category tree (names only), when connected — replaces the curated fallback list for this source. */
+  aliexpressCategories?: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -80,7 +83,8 @@ export function ProductFilters({
   }
 
   const selectedSource = sources.find((s) => s.id === source);
-  const allCategories = Array.from(new Set([...COMMON_PRODUCT_CATEGORIES, ...categories])).sort();
+  const baseCategories = source === "aliexpress" && aliexpressCategories.length > 0 ? aliexpressCategories : COMMON_PRODUCT_CATEGORIES;
+  const allCategories = Array.from(new Set([...baseCategories, ...categories])).sort();
 
   async function handleCategoryChange(value: string) {
     const category = value === "all" ? undefined : value;

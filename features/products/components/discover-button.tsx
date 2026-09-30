@@ -20,7 +20,16 @@ export interface DiscoverableSource {
   disabledReason?: string;
 }
 
-export function DiscoverButton({ sources, aliexpressConnected }: { sources: DiscoverableSource[]; aliexpressConnected: boolean }) {
+export function DiscoverButton({
+  sources,
+  aliexpressConnected,
+  aliexpressCategories = [],
+}: {
+  sources: DiscoverableSource[];
+  aliexpressConnected: boolean;
+  /** AliExpress's own real category tree (names only), when connected — replaces the curated fallback list for this source. */
+  aliexpressCategories?: string[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
@@ -33,6 +42,7 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
   const selectedSource = sources.find((s) => s.id === sourceId);
   const needsKeyword = sourceId !== "demo";
   const needsAliExpressConnection = sourceId === "aliexpress" && selectedSource?.configured && !aliexpressConnected;
+  const categoryOptions = sourceId === "aliexpress" && aliexpressCategories.length > 0 ? aliexpressCategories : COMMON_PRODUCT_CATEGORIES;
 
   async function handleSubmit() {
     setLoading(true);
@@ -117,7 +127,7 @@ export function DiscoverButton({ sources, aliexpressConnected }: { sources: Disc
                 <SelectValue placeholder="Any category" />
               </SelectTrigger>
               <SelectContent>
-                {COMMON_PRODUCT_CATEGORIES.map((c) => (
+                {categoryOptions.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
                   </SelectItem>
