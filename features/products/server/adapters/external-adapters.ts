@@ -36,18 +36,17 @@ export const externalProductSourceAdapters: ProductSourceAdapter[] = [
     "Requires Amazon Product Advertising API credentials (associate tag + access keys). Not configured in this environment."
   ),
   disabledAdapter(
-    "google_trends",
-    "Google Trends",
-    "Requires a Google Trends data provider integration. Not configured in this environment."
-  ),
-  disabledAdapter(
-    "meta_ad_library",
-    "Meta Ad Library",
-    "Requires a Meta Ad Library API access token. Not configured in this environment."
-  ),
-  disabledAdapter(
     "tiktok",
     "TikTok",
     "Requires TikTok for Business API credentials. Not configured in this environment."
   ),
+  // Google Trends and Meta Ad Library are deliberately NOT listed here.
+  // Neither is a product catalog — there's nothing to "search" for a
+  // product on either of them, only search-interest and ad-market data.
+  // Both are wired in as real signals that enrich AliExpress-sourced
+  // products instead (lib/trends/google-trends.ts, lib/meta-ads/client.ts,
+  // used from features/products/server/actions.ts and Winning Products'
+  // scoring) — listing them here as if they were alternative sources to
+  // pick instead of AliExpress was a leftover from this screen's original
+  // design, before that distinction was made.
 ];
