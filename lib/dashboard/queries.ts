@@ -1,5 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import { getOrCreateScoreConfig } from "@/features/winning-products/server/config";
+import { computeDropshippingScore } from "@/features/winning-products/server/scoring";
 
 export async function getDashboardStats(userId: string) {
   const [productsDiscovered, productsSaved, productsAnalyzed, storesCreated, adsGenerated, shopifyConnection] =
@@ -23,11 +25,24 @@ export async function getDashboardStats(userId: string) {
 }
 
 export async function getTopProductOpportunities(userId: string, limit = 5) {
-  return prisma.product.findMany({
-    where: { userId, deletedAt: null, winningScore: { not: null } },
-    orderBy: { winningScore: "desc" },
-    take: limit,
-  });
+  // Same unified dropshipping-oriented score the Product Finder now shows
+  // everywhere (features/products/server/queries.ts) — not a stored
+  // column, so this bounds to a candidate set, scores it with the user's
+  // own config, and sorts/caps in application code.
+  const [config, candidates] = await Promise.all([
+    getOrCreateScoreConfig(userId),
+    prisma.product.findMany({
+      where: { userId, deletedAt: null },
+      include: { manualSignal: true, snapshots: true },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+  ]);
+
+  return candidates
+    .map((product) => ({ ...product, winningScore: computeDropshippingScore(product, config, product.manualSignal, product.snapshots).score }))
+    .sort((a, b) => b.winningScore - a.winningScore)
+    .slice(0, limit);
 }
 
 export async function getRecentStores(userId: string, limit = 5) {

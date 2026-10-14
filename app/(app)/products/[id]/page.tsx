@@ -6,9 +6,9 @@ import { requireUser } from "@/lib/auth/session";
 import { getProductById } from "@/features/products/server/queries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { SaveButton } from "@/features/products/components/save-button";
 import { WinningScoreBadge } from "@/components/shared/winning-score-badge";
+import { ScoreBreakdown } from "@/features/winning-products/components/score-breakdown";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
@@ -16,16 +16,6 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   const product = await getProductById(params.id);
 
   if (!product || product.userId !== user.id) notFound();
-
-  const factors: { label: string; value: number | null; invert?: boolean }[] = [
-    { label: "Demand", value: product.demandScore },
-    { label: "Trend", value: product.trendScore },
-    { label: "Engagement", value: product.engagementScore },
-    { label: "Growth", value: product.growthScore },
-    { label: "Margin", value: product.estimatedMargin ? Math.min(100, product.estimatedMargin) : null },
-    { label: "Competition", value: product.competitionScore, invert: true },
-    { label: "Saturation", value: product.saturationScore, invert: true },
-  ];
 
   return (
     <div className="space-y-6">
@@ -84,15 +74,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               <CardTitle>Score breakdown</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {factors.map((factor) => (
-                <div key={factor.label}>
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span>{factor.label}</span>
-                    <span className="text-muted-foreground">{factor.value !== null ? Math.round(factor.value) : "—"}</span>
-                  </div>
-                  <Progress value={factor.value ?? 0} />
-                </div>
-              ))}
+              {product.dropshippingResult ? (
+                <ScoreBreakdown result={product.dropshippingResult} />
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
               <p className="pt-2 text-xs text-muted-foreground">
                 Winning Score is an estimate based on available signals. It is not a guarantee of sales or profit.
               </p>
