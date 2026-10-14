@@ -39,7 +39,7 @@ function snapshot(overrides: Partial<ProductSnapshot>): ProductSnapshot {
   };
 }
 
-type ProductInput = Pick<Product, "cost" | "shippingCost" | "price" | "demandScore" | "storeRating" | "reviewCount" | "weightGrams" | "shippingDays">;
+type ProductInput = Pick<Product, "cost" | "shippingCost" | "price" | "demandScore" | "storeRating" | "reviewCount" | "weightGrams" | "shippingDays" | "growthScore">;
 
 const baseProduct: ProductInput = {
   cost: 10,
@@ -50,6 +50,7 @@ const baseProduct: ProductInput = {
   reviewCount: null,
   weightGrams: null,
   shippingDays: null,
+  growthScore: null,
 };
 
 describe("computeOrderGrowth", () => {
@@ -98,9 +99,16 @@ describe("computeDropshippingScore", () => {
     expect(result.score).toBeLessThanOrEqual(100);
   });
 
-  it("scores margin at 100 when the actual multiplier meets or exceeds the target", () => {
-    const result = computeDropshippingScore({ ...baseProduct, cost: 10, price: 30 }, baseConfig, null, []);
-    expect(result.breakdown.margin).toBe(100); // 30 / 10 = 3x target multiplier exactly
+  it("scores margin at ~67 (not 100) when the actual multiplier exactly meets the target", () => {
+    // Exactly meeting the target is "solid", not an instant max score — see
+    // scoreMargin's comment for why it's scaled against 1.5x the target.
+    const result = computeDropshippingScore({ ...baseProduct, cost: 10, price: 30 }, baseConfig, null, []); // 30 / 10 = 3x target multiplier exactly
+    expect(result.breakdown.margin).toBe(67);
+  });
+
+  it("scores margin at 100 once the actual multiplier reaches 1.5x the target", () => {
+    const result = computeDropshippingScore({ ...baseProduct, cost: 10, price: 45 }, baseConfig, null, []); // 45 / 10 = 4.5x = 1.5 * target(3)
+    expect(result.breakdown.margin).toBe(100);
   });
 
   it("uses the real demandScore already on the product, never recomputing it", () => {
@@ -137,6 +145,36 @@ describe("computeDropshippingScore", () => {
     expect(result.breakdown.googleTrends).toBe(100);
   });
 
+  it("falls back to the product's real growthScore for googleTrends when there's no manual override", () => {
+    const result = computeDropshippingScore({ ...baseProduct, growthScore: 82 }, baseConfig, null, []);
+    expect(result.breakdown.googleTrends).toBe(82);
+  });
+
+  it("prefers a manual googleTrends override over the real growthScore when both are present", () => {
+    const manual: ProductManualSignal = {
+      id: "signal-1",
+      productId: "product-1",
+      wowEffect: null,
+      foundInPhysicalStores: null,
+      competitionLevel: null,
+      googleTrendsManual: "FALLING",
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const result = computeDropshippingScore({ ...baseProduct, growthScore: 82 }, baseConfig, manual, []);
+    expect(result.breakdown.googleTrends).toBe(0);
+  });
+
+  it("gives every AliExpress product a different margin score instead of one constant value (suggestRetailPrice's tiered multiplier, not a single fixed one)", () => {
+    const cheap = computeDropshippingScore({ ...baseProduct, cost: 4, price: 20.99 }, baseConfig, null, []); // suggestRetailPrice(4) = 5x
+    const mid = computeDropshippingScore({ ...baseProduct, cost: 10, price: 34.99 }, baseConfig, null, []); // suggestRetailPrice(10) = 3.5x
+    const expensive = computeDropshippingScore({ ...baseProduct, cost: 35, price: 70.99 }, baseConfig, null, []); // suggestRetailPrice(35) = 2x
+
+    expect(cheap.breakdown.margin).not.toBe(mid.breakdown.margin);
+    expect(mid.breakdown.margin).not.toBe(expensive.breakdown.margin);
+  });
+
   it("never produces a score outside 0-100 even with every factor available and maxed out", () => {
     const manual: ProductManualSignal = {
       id: "signal-1",
@@ -153,7 +191,7 @@ describe("computeDropshippingScore", () => {
       snapshot({ orders: 10, rating: 95, capturedAt: new Date("2024-01-01") }),
       snapshot({ orders: 1000, rating: 98, capturedAt: new Date("2024-02-01") }),
     ];
-    const product: ProductInput = { cost: 5, shippingCost: 0, price: 30, demandScore: 100, storeRating: 100, reviewCount: 5000, weightGrams: 50, shippingDays: 2 };
+    const product: ProductInput = { cost: 5, shippingCost: 0, price: 30, demandScore: 100, storeRating: 100, reviewCount: 5000, weightGrams: 50, shippingDays: 2, growthScore: 100 };
     const result = computeDropshippingScore(product, baseConfig, manual, snapshots);
 
     expect(result.partial).toBe(false);

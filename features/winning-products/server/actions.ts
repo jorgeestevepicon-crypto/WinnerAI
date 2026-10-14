@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/session";
 import { logActivity } from "@/lib/activity/log";
 import { runProductDiscovery } from "@/features/products/server/actions";
 import { demandFromVolume } from "@/features/products/server/adapters/aliexpress-adapter";
+import { suggestRetailPrice } from "@/features/products/server/pricing";
 import { getValidAccessToken } from "@/lib/aliexpress/connection";
 import { getAliExpressProductDetail, parseAliExpressItemId } from "@/lib/aliexpress/product-detail";
 import { recordSnapshot } from "@/features/winning-products/server/snapshots";
@@ -106,7 +107,7 @@ export async function addManualAliExpressProduct(input: unknown) {
     };
   }
 
-  const suggestedPrice = Math.floor(detail.price * 3) + 0.99;
+  const suggestedPrice = suggestRetailPrice(detail.price);
 
   const product = await prisma.product.create({
     data: {

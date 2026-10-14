@@ -23,7 +23,14 @@ function scoreMargin(product: Pick<Product, "cost" | "shippingCost" | "price">, 
   const totalCost = product.cost + (product.shippingCost ?? 0);
   if (totalCost <= 0) return undefined;
   const actualMultiplier = product.price / totalCost;
-  return Math.round(clamp((actualMultiplier / config.marginTargetMultiplier) * 100));
+  // Scaled against 1.5x the target, not the target itself — exactly
+  // hitting the configured target scores ~67 ("solid"), not an instant
+  // 100. Scaling it to saturate right at the target would make every
+  // product that merely clears it (which most auto-priced AliExpress
+  // items do, almost by construction) tie at the same ceiling value,
+  // unable to differentiate a product that clears it comfortably from
+  // one that blows past it.
+  return Math.round(clamp((actualMultiplier / (config.marginTargetMultiplier * 1.5)) * 100));
 }
 
 /** 100 inside [idealPriceMin, idealPriceMax], decaying linearly to 0 the further outside it the price is. */
@@ -90,9 +97,19 @@ function scoreCompetitionLevel(manual: ProductManualSignal | null): number | und
 }
 
 const TREND_SCORES = { RISING: 100, STABLE: 50, FALLING: 0 } as const;
-function scoreGoogleTrends(manual: ProductManualSignal | null): number | undefined {
-  if (!manual?.googleTrendsManual) return undefined;
-  return TREND_SCORES[manual.googleTrendsManual];
+/**
+ * The user's manual override takes priority when set. Otherwise this falls
+ * back to the product's own real growthScore (from the Google Trends
+ * enrichment in features/products/server/actions.ts) directly — not just
+ * through the manual field, which is only ever pre-filled for products
+ * that went through the Winning Products workflow. Without this fallback,
+ * every other product (the normal Product Finder's bread and butter) would
+ * always exclude this factor, even when a real trend signal exists for it.
+ */
+function scoreGoogleTrends(manual: ProductManualSignal | null, product: Pick<Product, "growthScore">): number | undefined {
+  if (manual?.googleTrendsManual) return TREND_SCORES[manual.googleTrendsManual];
+  if (product.growthScore !== null && product.growthScore !== undefined) return clamp(product.growthScore);
+  return undefined;
 }
 
 type WeightKey =
@@ -134,7 +151,7 @@ const WEIGHT_KEYS: Record<keyof DropshippingScoreBreakdown, WeightKey> = {
  * available, exactly like the generic Winning Score engine.
  */
 export function computeDropshippingScore(
-  product: Pick<Product, "cost" | "shippingCost" | "price" | "demandScore" | "storeRating" | "reviewCount" | "weightGrams" | "shippingDays">,
+  product: Pick<Product, "cost" | "shippingCost" | "price" | "demandScore" | "storeRating" | "reviewCount" | "weightGrams" | "shippingDays" | "growthScore">,
   config: WinningScoreConfig,
   manualSignal: ProductManualSignal | null,
   snapshots: ProductSnapshot[]
@@ -149,7 +166,7 @@ export function computeDropshippingScore(
     wowEffect: scoreWowEffect(manualSignal),
     physicalStores: scorePhysicalStores(manualSignal),
     competitionLevel: scoreCompetitionLevel(manualSignal),
-    googleTrends: scoreGoogleTrends(manualSignal),
+    googleTrends: scoreGoogleTrends(manualSignal, product),
   };
 
   const factorKeys = Object.keys(raw) as (keyof DropshippingScoreBreakdown)[];

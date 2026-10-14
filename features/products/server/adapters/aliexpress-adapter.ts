@@ -4,6 +4,7 @@ import { signParams, timestampGMT8, callAliExpress } from "@/lib/aliexpress/sign
 import { getValidAccessToken } from "@/lib/aliexpress/connection";
 import { CATEGORY_SEARCH_TERMS } from "@/features/products/categories";
 import { generateProductSearchTerms } from "@/lib/ai/services/search-terms";
+import { suggestRetailPrice } from "@/features/products/server/pricing";
 import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter } from "@/features/products/types";
 
 /**
@@ -275,10 +276,7 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
         if (rating !== undefined && rating < MIN_RATING_PERCENT) return null;
 
         const volume = parseVolume(product.orders);
-        // Standard 3x dropshipping markup as a starting suggestion the user
-        // is expected to adjust in the product editor — not a claim about
-        // real-world pricing data.
-        const suggestedPrice = Math.floor(cost * 3) + 0.99;
+        const suggestedPrice = suggestRetailPrice(cost);
         const image = extractImage(product);
 
         return {
