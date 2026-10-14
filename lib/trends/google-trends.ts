@@ -130,3 +130,74 @@ export async function getGoogleTrendsSignal(keyword: string, geo = ""): Promise<
     return null;
   }
 }
+
+interface RankedQuery {
+  query?: string;
+}
+interface RelatedQueriesData {
+  default?: { rankedList?: { rankedKeyword?: RankedQuery[] }[] };
+}
+
+/**
+ * Real Google Trends "rising related queries" for `keyword` — searches
+ * people are increasingly making alongside it right now, not just a
+ * historical interest level (that's getGoogleTrendsSignal above). Meant to
+ * seed AliExpress searches with phrases people are actually searching more
+ * of, instead of only AI-brainstormed category phrases
+ * (lib/ai/services/search-terms.ts).
+ *
+ * This account has never called this specific widget before (unlike the
+ * already-verified interest-over-time one above), so the exact rankedList
+ * ordering (index 1 = "rising" vs "top") is an educated guess from how
+ * pytrends/google-trends-api read the same endpoint — falls back to
+ * whichever ranked list is actually present, and logs the raw response if
+ * neither parses, so it can be corrected from a real log. Returns []
+ * (never a guess) on any failure, so callers just get fewer keyword
+ * variants rather than a broken search.
+ */
+export async function getRisingRelatedQueries(keyword: string, geo = "", limit = 5): Promise<string[]> {
+  try {
+    const now = new Date();
+    const start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const tz = String(now.getTimezoneOffset());
+
+    const exploreBody = await httpsGet("/trends/api/explore", {
+      hl: "en-US",
+      tz,
+      req: JSON.stringify({
+        comparisonItem: [{ keyword, geo, time: `${formatDate(start)} ${formatDate(now)}` }],
+        category: 0,
+        property: "",
+      }),
+    });
+
+    const explore = parseJsonBody(exploreBody) as {
+      widgets?: Array<{ id?: string; request?: unknown; token?: string }>;
+    };
+    const widget = explore.widgets?.find((w) => w.id?.includes("RELATED_QUERIES"));
+    if (!widget?.request || !widget.token) return [];
+
+    const dataBody = await httpsGet("/trends/api/widgetdata/relatedsearches", {
+      hl: "en-US",
+      tz,
+      req: JSON.stringify(widget.request),
+      token: widget.token,
+    });
+
+    const data = parseJsonBody(dataBody) as RelatedQueriesData;
+    const rankedLists = data.default?.rankedList ?? [];
+    const rising = rankedLists[1]?.rankedKeyword ?? rankedLists[0]?.rankedKeyword ?? [];
+    const queries = rising.map((r) => r.query).filter((q): q is string => !!q);
+
+    if (queries.length === 0) {
+      console.error(
+        `Google Trends rising-queries lookup for "${keyword}" returned no queries via the known response path. Raw response:`,
+        JSON.stringify(data).slice(0, 2000)
+      );
+    }
+    return queries.slice(0, limit);
+  } catch (error) {
+    console.error(`Google Trends rising-queries lookup failed for "${keyword}" — skipping.`, error);
+    return [];
+  }
+}

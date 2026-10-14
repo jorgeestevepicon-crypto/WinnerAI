@@ -4,6 +4,7 @@ import { signParams, timestampGMT8, callAliExpress } from "@/lib/aliexpress/sign
 import { getValidAccessToken } from "@/lib/aliexpress/connection";
 import { CATEGORY_SEARCH_TERMS } from "@/features/products/categories";
 import { generateProductSearchTerms } from "@/lib/ai/services/search-terms";
+import { getRisingRelatedQueries } from "@/lib/trends/google-trends";
 import { suggestRetailPrice } from "@/features/products/server/pricing";
 import type { NormalizedProductInput, ProductSearchParams, ProductSourceAdapter } from "@/features/products/types";
 
@@ -216,12 +217,18 @@ export const aliexpressProductSourceAdapter: ProductSourceAdapter = {
     let keywordVariants: string[];
     if (categorySearchTerm) {
       // A single fixed phrase per category only ever surfaces one narrow
-      // slice of AliExpress's catalog. Ask the AI provider for several
-      // diverse, realistic product-title phrases for this category instead,
-      // and search all of them — real winning-product candidates come from
-      // covering more of the catalog, not from one lucky keyword.
-      const diverseTerms = await generateProductSearchTerms(category!, categorySearchTerm);
-      keywordVariants = diverseTerms.map((term) => [term, query].filter(Boolean).join(" "));
+      // slice of AliExpress's catalog. Combine two complementary sources of
+      // extra keyword variants instead of relying on just one: real rising
+      // Google Trends queries for this category (what people are actually
+      // searching more of right now — a genuine "trending" signal, not a
+      // guess) plus the AI-brainstormed diverse phrases as a fallback/filler
+      // when rising-query data is sparse or unavailable for a niche category.
+      const [risingQueries, diverseTerms] = await Promise.all([
+        getRisingRelatedQueries(categorySearchTerm),
+        generateProductSearchTerms(category!, categorySearchTerm),
+      ]);
+      const baseTerms = Array.from(new Set([...risingQueries, ...diverseTerms])).slice(0, 8);
+      keywordVariants = baseTerms.map((term) => [term, query].filter(Boolean).join(" "));
     } else if (query) {
       keywordVariants = [query];
     } else {
