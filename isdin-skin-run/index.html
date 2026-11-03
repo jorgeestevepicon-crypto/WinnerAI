@@ -101,7 +101,7 @@ a.btn{display:block;text-decoration:none;box-sizing:border-box}
     </div>
     <div class="skins" id="skins"></div>
     <div class="toast" id="mToast"></div>
-    <p class="help">Desliza <kbd>←</kbd> <kbd>→</kbd> para cambiar de carril, <kbd>↑</kbd> para saltar y <kbd>↓</kbd> para deslizarte. Esquiva las <b>Nubes UV</b>, recoge <b>botes ISDIN</b> y coge el <b>Escudo SPF</b>.</p>
+    <p class="help">Desliza <kbd>←</kbd> <kbd>→</kbd> para cambiar de carril, <kbd>↑</kbd> para saltar y <kbd>↓</kbd> para deslizarte. Esquiva las <b>Nubes UV</b>, recoge <b>botes ISDIN</b> y coge el <b>Escudo SPF</b>. En cada mundo Molly estrena look.</p>
     <p class="fine">Prototipo de campaña · Juego para niños de 8 a 14 años</p>
   </div>
 </div>
@@ -156,9 +156,13 @@ function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catc
 const SKINS=[
   {name:'Molly',cost:0,fur:'#e9b25f',furD:'#c98a3c',hat:'#e8d3a6',band:'#ff8a3d',shirt:'#ffffff',trim:'#ff8a3d'},
   {name:'Surfera',cost:150,fur:'#e9b25f',furD:'#c98a3c',hat:'#12b5c9',band:'#ffffff',shirt:'#bdeffa',trim:'#0b8597'},
-  {name:'Exploradora',cost:400,fur:'#d99c55',furD:'#b37634',hat:'#7cc36a',band:'#3f7d35',shirt:'#fff1cf',trim:'#7cc36a'},
-  {name:'Estrella',cost:800,fur:'#f0c27a',furD:'#cf9a4b',hat:'#ff6fa5',band:'#ffc928',shirt:'#ffe3ef',trim:'#ff6fa5',glasses:true},
+  {name:'Exploradora',cost:400,fur:'#d99c55',furD:'#b37634',hat:'#7cc36a',band:'#3f7d35',shirt:'#fff1cf',trim:'#7cc36a',backpack:true},
+  {name:'Estrella',cost:800,fur:'#f0c27a',furD:'#cf9a4b',hat:'#ff6fa5',band:'#ffc928',shirt:'#ffe3ef',trim:'#ff6fa5',glasses:true,backStar:true},
 ];
+/* look de Molly en cada mundo (en la Playa lleva el personaje elegido en el menú) */
+const WINTER={name:'Invierno',fur:'#e9b25f',furD:'#c98a3c',hat:'#2f7fd6',band:'#ffffff',shirt:'#9fd6ff',trim:'#2f7fd6',hatType:'beanie',scarf:'#ff4f6d'};
+const WORLD_OUTFITS=[null,SKINS[2],WINTER,SKINS[3]];
+function curSkin(){const w=G?G.world:0;return(w>0&&WORLD_OUTFITS[w])||SKINS[save.skin]||SKINS[0];}
 
 /* ---------- mundos ---------- */
 const WORLDS=[
@@ -267,6 +271,19 @@ function sunFace(x,y,r,rot=0){
 }
 
 /* ---------- Molly ---------- */
+function mollyHat(x,y,u,sk,lowered){
+  const o=lowered?38*u:0;
+  if(sk.hatType==='beanie'){
+    rr(x-20*u,y-90*u+o,40*u,24*u,14*u);ctx.fillStyle=sk.hat;ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.18)';for(let i=-2;i<=2;i++)ctx.fillRect(x+i*7*u-1*u,y-86*u+o,2*u,14*u);
+    rr(x-21*u,y-72*u+o,42*u,8*u,4*u);ctx.fillStyle=sk.band;ctx.fill();
+    circ(x,y-92*u+o,7*u,'#ffffff');
+    return;
+  }
+  ell(x,y-74*u+o,31*u,7.5*u,sk.hat);
+  rr(x-19*u,y-92*u+o,38*u,19*u,10*u);ctx.fillStyle=sk.hat;ctx.fill();
+  ctx.fillStyle=sk.band;ctx.fillRect(x-19*u,y-80*u+o,38*u,5*u);
+}
 function mollyBack(x,y,s,sk,ph,sliding,blink){
   const u=s;
   ctx.save();
@@ -277,8 +294,8 @@ function mollyBack(x,y,s,sk,ph,sliding,blink){
     rr(x-22*u,y-26*u,44*u,16*u,8*u);ctx.fillStyle=sk.shirt;ctx.fill();
     ell(x-24*u,y-22*u,8*u,13*u,sk.furD,-.4);ell(x+24*u,y-22*u,8*u,13*u,sk.furD,.4);
     ell(x,y-33*u,19*u,13*u,sk.fur);
-    ell(x,y-37*u,27*u,6*u,sk.hat);rr(x-16*u,y-50*u,32*u,14*u,7*u);ctx.fillStyle=sk.hat;ctx.fill();
-    ctx.fillStyle=sk.band;ctx.fillRect(x-16*u,y-41*u,32*u,4*u);
+    if(sk.scarf){rr(x-18*u,y-30*u,36*u,6*u,3*u);ctx.fillStyle=sk.scarf;ctx.fill();}
+    mollyHat(x,y,u,sk,true);
     ctx.restore();return;
   }
   const sw=Math.sin(ph), sw2=Math.cos(ph);
@@ -292,17 +309,29 @@ function mollyBack(x,y,s,sk,ph,sliding,blink){
   // cuerpo / camiseta
   rr(x-21*u,y-48*u,42*u,34*u,13*u);ctx.fillStyle=sk.shirt;ctx.fill();
   ctx.fillStyle=sk.trim;rr(x-21*u,y-20*u,42*u,5*u,2.5*u);ctx.fill();
-  ctx.fillStyle=sk.trim;ctx.font=`800 ${9*u}px "Baloo 2",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('MOLLY',x,y-34*u);
+  if(sk.backpack){
+    rr(x-15*u,y-47*u,30*u,30*u,8*u);ctx.fillStyle='#9a6235';ctx.fill();
+    rr(x-15*u,y-47*u,30*u,12*u,6*u);ctx.fillStyle='#5f9f4f';ctx.fill();
+    rr(x-9*u,y-30*u,18*u,9*u,3*u);ctx.fillStyle='#b97a45';ctx.fill();
+    rr(x-18*u,y-21*u,36*u,8*u,4*u);ctx.fillStyle='#ff8a3d';ctx.fill();
+  }else if(sk.backStar){
+    ctx.fillStyle=sk.trim;ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=(i%2?5:12)*u;ctx.lineTo(x+Math.cos(a)*r,y-33*u+Math.sin(a)*r);}ctx.closePath();ctx.fill();
+  }else{
+    ctx.fillStyle=sk.trim;ctx.font=`800 ${9*u}px "Baloo 2",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('MOLLY',x,y-34*u);
+  }
   // brazos
   ell(x-24*u,y-36*u+sw2*4*u,6.5*u,12*u,sk.fur,.35+sw*.4);ell(x+24*u,y-36*u-sw2*4*u,6.5*u,12*u,sk.fur,-.35-sw*.4);
   // cabeza
   circ(x,y-62*u,19*u,sk.fur);
   // orejas
   ell(x-19*u,y-56*u,8*u,15*u,sk.furD,.25+sw*.12);ell(x+19*u,y-56*u,8*u,15*u,sk.furD,-.25-sw*.12);
-  // sombrero
-  ell(x,y-74*u,31*u,7.5*u,sk.hat);
-  rr(x-19*u,y-92*u,38*u,19*u,10*u);ctx.fillStyle=sk.hat;ctx.fill();
-  ctx.fillStyle=sk.band;ctx.fillRect(x-19*u,y-80*u,38*u,5*u);
+  // bufanda con puntas al viento
+  if(sk.scarf){
+    rr(x-20*u,y-50*u,40*u,8*u,4*u);ctx.fillStyle=sk.scarf;ctx.fill();
+    ctx.save();ctx.translate(x+10*u,y-46*u);ctx.rotate(.5+Math.sin(t*12)*.25);rr(0,-3*u,22*u,7*u,3*u);ctx.fillStyle=sk.scarf;ctx.fill();ctx.fillStyle='#ffffff';ctx.fillRect(15*u,-3*u,2*u,7*u);ctx.restore();
+  }
+  // sombrero o gorro
+  mollyHat(x,y,u,sk,false);
   ctx.restore();
 }
 function mollyFront(c,cx,cy,u,sk,wave){
@@ -546,7 +575,8 @@ function update(dt){
   const dz=G.speed*dt;G.dist+=dz;
   // mundo
   const wi=Math.floor(G.dist/WORLD_LEN)%WORLDS.length;
-  if(wi!==G.world){G.prevWorld=G.world;G.world=wi;G.worldT=0;banner(WORLDS[wi].name,'Nuevo mundo');SFX.power();}
+  if(wi!==G.world){G.prevWorld=G.world;G.world=wi;G.worldT=0;G.poof=.8;banner(WORLDS[wi].name,'Nuevo mundo · nuevo look');SFX.power();}
+  if(G.poof>0)G.poof=Math.max(0,G.poof-dt);
   if(G.worldT<1)G.worldT=Math.min(1,G.worldT+dt/1.6);
   // jugador
   G.px+=(G.lane-G.px)*Math.min(1,dt*14);
@@ -609,7 +639,7 @@ function render(dt){
   items.sort((a,b)=>b.z-a.z).forEach(it=>{if(it.z<58)it.draw();});
 }
 function drawPlayer(){
-  const sk=SKINS[save.skin]||SKINS[0];
+  const sk=curSkin();
   const g=P(G.px,0,0);const p=P(G.px,0,G.jumpH);
   ell(g.x,g.y,24*g.s*(1-Math.min(.5,G.jumpH/200)),6*g.s,'rgba(0,0,0,.18)');
   if(G.shield>0){ctx.save();ctx.globalAlpha=.25+.1*Math.sin(t*8);ell(p.x,p.y-44*p.s,48*p.s,56*p.s,'#12b5c9');ctx.restore();}
@@ -617,6 +647,13 @@ function drawPlayer(){
     for(let i=0;i<5;i++){const a=t*3+i*1.256;ctx.globalAlpha=.9;sunFace(p.x+Math.cos(a)*30*p.s,p.y-100*p.s+Math.sin(a)*8*p.s,5*p.s,0);ctx.globalAlpha=1;}
     return;}
   mollyBack(p.x,p.y,p.s,sk,G.jumpH>0?1.2:G.dist*1.9,G.slide>0,G.inv>0);
+  if(G.poof>0){ // destellos al cambiarse de ropa
+    const k=G.poof/.8;ctx.save();ctx.globalAlpha=k;
+    ell(p.x,p.y-50*p.s,(60-40*k)*p.s,(70-45*k)*p.s,'rgba(255,255,255,.55)');
+    for(let i=0;i<8;i++){const a=i*Math.PI/4+t*4,r=(30+40*(1-k))*p.s;const sx=p.x+Math.cos(a)*r,sy=p.y-50*p.s+Math.sin(a)*r;
+      ctx.fillStyle=i%2?'#ffc928':'#ffffff';ctx.beginPath();for(let j=0;j<8;j++){const b=j*Math.PI/4,rr2=(j%2?2:7)*p.s;ctx.lineTo(sx+Math.cos(b)*rr2,sy+Math.sin(b)*rr2);}ctx.closePath();ctx.fill();}
+    ctx.restore();
+  }
 }
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000||0);last=now;t+=dt;
