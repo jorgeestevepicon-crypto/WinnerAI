@@ -20,7 +20,7 @@ body{background:#4cc3f5;color:var(--ink);font-family:var(--body);overflow:hidden
   padding-top:calc(10px + env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
 .pill{background:rgba(255,255,255,.92);border-radius:999px;padding:4px 14px 4px 6px;display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:800;font-size:20px;box-shadow:0 3px 0 rgba(22,57,92,.18);font-variant-numeric:tabular-nums}
 .pill i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:15px}
-.coin-i{background:radial-gradient(circle at 35% 35%,#ffe680,#ffb800);color:#a35f00}
+.coin-i{background:#e3f8fb}.coin-i svg{width:16px;height:22px}
 .score-i{background:var(--turq);color:#fff}
 .hud-col{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .hud-r{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
@@ -79,7 +79,7 @@ a.btn{display:block;text-decoration:none;box-sizing:border-box}
 <div class="hud" id="hud" hidden>
   <div class="hud-col">
     <div class="pill"><i class="score-i">★</i><span id="hScore">0</span></div>
-    <div class="pill"><i class="coin-i">☀</i><span id="hCoins">0</span></div>
+    <div class="pill"><i class="coin-i"><svg viewBox="0 0 16 22" aria-hidden="true"><rect x="4" y="0" width="8" height="5" rx="1.5" fill="#12b5c9"/><rect x="1.5" y="4" width="13" height="17.5" rx="4" fill="#fff" stroke="#16395c" stroke-width="1.2"/><rect x="1.5" y="10" width="13" height="6" fill="#12b5c9"/><circle cx="8" cy="13" r="2" fill="#ffc928"/></svg></i><span id="hCoins">0</span></div>
     <div class="powers" id="hPowers"></div>
   </div>
   <div class="hud-r">
@@ -97,11 +97,11 @@ a.btn{display:block;text-decoration:none;box-sizing:border-box}
     <button class="btn" id="bPlay">¡A correr!</button>
     <div class="stats">
       <div class="stat"><b id="mBest">0</b><small>Récord</small></div>
-      <div class="stat"><b id="mBank">0</b><small>Soles</small></div>
+      <div class="stat"><b id="mBank">0</b><small>Botes</small></div>
     </div>
     <div class="skins" id="skins"></div>
     <div class="toast" id="mToast"></div>
-    <p class="help">Desliza <kbd>←</kbd> <kbd>→</kbd> para cambiar de carril, <kbd>↑</kbd> para saltar y <kbd>↓</kbd> para deslizarte. Esquiva las <b>Nubes UV</b>, recoge soles y coge el <b>Escudo SPF</b>.</p>
+    <p class="help">Desliza <kbd>←</kbd> <kbd>→</kbd> para cambiar de carril, <kbd>↑</kbd> para saltar y <kbd>↓</kbd> para deslizarte. Esquiva las <b>Nubes UV</b>, recoge <b>botes ISDIN</b> y coge el <b>Escudo SPF</b>.</p>
     <p class="fine">Prototipo de campaña · Juego para niños de 8 a 14 años</p>
   </div>
 </div>
@@ -121,7 +121,7 @@ a.btn{display:block;text-decoration:none;box-sizing:border-box}
     <div class="big" id="oScore">0</div>
     <div id="oNew" class="new" hidden>¡Nuevo récord!</div>
     <div class="stats">
-      <div class="stat"><b id="oCoins">0</b><small>Soles</small></div>
+      <div class="stat"><b id="oCoins">0</b><small>Botes</small></div>
       <div class="stat"><b id="oDist">0 m</b><small>Distancia</small></div>
       <div class="stat"><b id="oBest">0</b><small>Récord</small></div>
     </div>
@@ -390,19 +390,25 @@ function drawBlock(x,y,s,id){
   ctx.fillStyle='#ffe14d';ctx.beginPath();const lx=x+30*s,ly=y-70*s+b;ctx.moveTo(lx,ly);ctx.lineTo(lx-7*s,ly+16*s);ctx.lineTo(lx,ly+15*s);ctx.lineTo(lx-5*s,ly+30*s);ctx.lineTo(lx+9*s,ly+10*s);ctx.lineTo(lx+2*s,ly+11*s);ctx.lineTo(lx+7*s,ly);ctx.fill();
 }
 function drawCoin(x,y,s,id){
-  const w=Math.abs(Math.cos(t*5+id*.7));
-  ctx.save();ctx.translate(x,y);ctx.scale(Math.max(.15,w),1);
-  circ(0,0,11*s,'#ffb800');circ(0,0,8.5*s,'#ffd84a');
-  if(w>.5){circ(-3*s,-2*s,1.2*s,'#a35f00');circ(3*s,-2*s,1.2*s,'#a35f00');ctx.strokeStyle='#a35f00';ctx.lineWidth=1.2*s;ctx.beginPath();ctx.arc(0,0,4*s,.2*Math.PI,.8*Math.PI);ctx.stroke();}
+  // bote ISDIN Kids: cuerpo blanco, tapón y etiqueta de color, sol sonriente
+  const CAPS=['#12b5c9','#ffc928','#ff8a3d'];const cap=CAPS[id%3];
+  const b=Math.sin(t*5+id*.7)*2.5*s, r=Math.sin(t*3+id)*.18;
+  ctx.save();ctx.translate(x,y+b);ctx.rotate(r);ctx.scale(1.35,1.35);
+  ell(0,0,15*s,15*s,'rgba(255,255,255,.35)');
+  ctx.fillStyle=cap;rr(-5*s,-17*s,10*s,7*s,2*s);ctx.fill();
+  ctx.fillStyle='#ffffff';rr(-8.5*s,-11*s,17*s,24*s,6*s);ctx.fill();
+  ctx.strokeStyle='#16395c';ctx.lineWidth=Math.max(1,1.3*s);ctx.stroke();
+  ctx.fillStyle=cap;ctx.fillRect(-8.5*s,-3*s,17*s,9*s);
+  circ(0,1.5*s,3.2*s,'#ffe14d');
+  if(s>.9){ctx.fillStyle='#16395c';ctx.font=`800 ${4.6*s}px "Nunito",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ISDIN',0,-7*s);}
   ctx.restore();
 }
 function drawShieldItem(x,y,s){
   const b=Math.sin(t*5)*3*s;y+=b;
-  circ(x,y,20*s,'rgba(18,181,201,.25)');
-  rr(x-9*s,y-15*s,18*s,30*s,6*s);ctx.fillStyle='#ffffff';ctx.fill();
-  ctx.fillStyle='#12b5c9';rr(x-9*s,y-2*s,18*s,12*s,2*s);ctx.fill();
-  ctx.fillStyle='#ff8a3d';rr(x-5*s,y-21*s,10*s,7*s,2*s);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font=`800 ${6*s}px "Nunito",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('SPF',x,y+4*s);
+  circ(x,y,22*s,'rgba(18,181,201,.28)');
+  ctx.beginPath();ctx.moveTo(x,y-17*s);ctx.lineTo(x+14*s,y-11*s);ctx.quadraticCurveTo(x+13*s,y+9*s,x,y+17*s);ctx.quadraticCurveTo(x-13*s,y+9*s,x-14*s,y-11*s);ctx.closePath();
+  ctx.fillStyle='#12b5c9';ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=2.5*s;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font=`800 ${7*s}px "Baloo 2",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('SPF',x,y-2*s);ctx.fillText('50',x,y+6*s);
 }
 function drawMagnetItem(x,y,s){
   const b=Math.sin(t*5)*3*s;y+=b;
@@ -503,7 +509,7 @@ function update(dt){
     if(Math.abs(o.z)<.55&&Math.abs(o.lane-G.px)<.5){
       if(o.k==='coin'){if(o.h>bottom-10&&o.h<top+10){o.dead=true;G.coins++;SFX.coin();}}
       else if(o.k==='shield'){o.dead=true;G.shield=10;SFX.power();banner('Escudo SPF','¡Protegida!');}
-      else if(o.k==='magnet'){o.dead=true;G.magnet=8;SFX.power();banner('Imán de soles','¡Atrae monedas!');}
+      else if(o.k==='magnet'){o.dead=true;G.magnet=8;SFX.power();banner('Imán de botes','¡Atrae los botes ISDIN!');}
       else if(G.inv<=0){
         const hit=o.k==='low'?bottom<32:o.k==='high'?top>48:bottom<86;
         if(hit){
@@ -571,16 +577,16 @@ function buildSkins(){
     const own=save.unlocked.includes(i);
     const b=document.createElement('button');b.type='button';b.id='skin'+i;
     b.className='skin'+(save.skin===i?' on':'')+(own?'':' locked');
-    b.setAttribute('aria-label',sk.name+(own?'':' — cuesta '+sk.cost+' soles'));
+    b.setAttribute('aria-label',sk.name+(own?'':' — cuesta '+sk.cost+' botes'));
     const c=document.createElement('canvas');c.width=112;c.height=112;const k=c.getContext('2d');
     k.save();k.beginPath();k.rect(0,0,112,112);k.clip();mollyFront(k,56,92,1.05,sk,0);k.restore();
     b.appendChild(c);
     const n=document.createElement('span');n.textContent=sk.name;b.appendChild(n);
-    if(!own){const s=document.createElement('small');s.textContent='☀ '+sk.cost;b.appendChild(s);}
+    if(!own){const s=document.createElement('small');s.textContent='🧴 '+sk.cost;b.appendChild(s);}
     b.onclick=()=>{
       if(own){save.skin=i;persist();buildSkins();$('mToast').textContent='';}
       else if(save.bank>=sk.cost){save.bank-=sk.cost;save.unlocked.push(i);save.skin=i;persist();SFX.power();buildSkins();$('mToast').textContent='¡Has desbloqueado a '+sk.name+'!';}
-      else{$('mToast').textContent='Te faltan '+(sk.cost-save.bank)+' soles para '+sk.name+'.';}
+      else{$('mToast').textContent='Te faltan '+(sk.cost-save.bank)+' botes para '+sk.name+'.';}
     };
     box.appendChild(b);
   });
